@@ -233,3 +233,6 @@ fabric.properties
 
 # Confidential data
 data/raw/pHLA_stability/Stability.data
+
+# Ignore decompressed files
+data/raw/pHLA_binding/NetMHCpan_train/
