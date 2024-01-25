@@ -33,7 +33,7 @@ We provide the raw data from the supplementary information. It contains:
 - `NetMHCpan_train.tar.gz`: Training data for NetMHCpan 4.1
 - `CD8_benchmark.tar.gz`: Test data for NetMHCpan 4.1
 
-> #### Training data
+> #### Train data
 > The training data is composed of 12 files:
 > - `MHC_pseudo.dat`: MHC allele information. It has the following format:
 >   ```text
@@ -119,10 +119,50 @@ We provide the raw data from the supplementary information. It contains:
 >   
 
 > #### Test data
-> Under construction
->
->     ##### Data insights from the publication
+> Contains 1660 epitopes from 52 different MHC-1 alleles ([Jurtz et al. (2017)](https://doi.org/10.4049/jimmunol.1700893))
+> This dataset was limited by the HLA molecules covered by the methods included 
+> in their benchmark (NetMHCpan-4.1, NetMHCpan-4.0, MixMHCpred, MHCFlurry,
+> MHCFlurry_EL).
 > 
+> In the compressed file there are 1660 files, one per epitope. Each file has the
+> following format:
+> ```text
+> # Epitope sequence
+> THSFEFAQFDNFLV 0 HLA-A02:01
+> HSFEFAQFDNFLVE 0 HLA-A02:01
+> SFEFAQFDNFLVEA 0 HLA-A02:01
+> FEFAQFDNFLVEAT 0 HLA-A02:01
+> EFAQFDNFLVEATR 0 HLA-A02:01
+> YVVTWIVGA 1 HLA-A02:01
+> ```
+> Where the **first column is the peptide sequence**, the **second column is the
+> binding label** (0 non-binder, 1 binder. In each document we will have a single
+> binder and the rest are non-binders) and the **third column is the HLA allele**.
+> 
+> There is also a file called `CD8_mapped`, which contains the following information:
+> ```text
+> 1 AAAGAAVTV HLA-A02:01 MPVDSSSTHRHRCVAAPLVRLAAAGAAVTVAVGTAAAWAHAGAPQHRCIHDAMQARVLQSVAAQRMAPSAVSAVGLPYVSVVPVENASTLDYSLSDSTSPGVVRAANWGALRVAVSAEDLTDPAYHCARVGQQVNNHAGDIVTCTAEDILTDEKRDTLVKHLVPQALQLHRERLKVRQVQGKWKVTGMADVICGDFKVPPEHITEGVTNTDFVLYVASVPSEESVLAWATTCQVFPDGHPAVGVINIPAANIASRYDQLVTRVVTHEMAHAVGFSGTFFGAVGIVQEVPHLRRKDFNVSVITSSTVVAKAREQYGCNSLEYLEIEDQGGAGSAGSHIKMRNAKDELMAPAASAGYYTALTMAVFQDLGFYQADFSKAEEMPWGRNVGCAFLSEKCMAKNVTKWPAMFCNESAATIRCPTDRLRVGTCGITAYNTSLATYWQYFTNASLGGYSPFLDYCPFVVGYRNGSCNQDASTTPDLLAAFNVFSEAARCIDGAFTPKNRTAADGYYTALCANVKCDTATRTYSVQVRGTNGYANCTPGLRVKLSSVSDAFEKGGYVTCPPYVEVCQGNVKAAKDFAGDTDSSSSADDAADKEAMQRWSDRMAALATATTLLLGMVLSLMALLVVRLLLTSSPWCCCRLGGLPT  AAAGAAVTV_HLA-A02:01
+> 2 AAAGFLFCV HLA-A02:01 MKGGCVSQWKAAAGFLFCVMVFASAERPVFTNHFLVELHKGGEDKARQVAAEHGFGVRKLPFAEGLYHFYHNGLAKAKRRRSLHHKQQLERDPRVKMALQQEGFDRKKRGYRDINEIDINMNDPLFTKQWYLINTGQADGTPGLDLNVAEAWELGYTGKGVTIGIMDDGIDYLHPDLASNYNAEASYDFSSNDPYPYPRYTDDWFNSHGTRCAGEVSAAANNNICGVGVAYNSKVAGIRMLDQPFMTDIIEASSISHMPQLIDIYSASWGPTDNGKTVDGPRELTLQAMADGVNKGRGGKGSIYVWASGDGGSYDDCNCDGYASSMWTISINSAINDGRTALYDESCSSTLASTFSNGRKRNPEAGVATTDLYGNCTLRHSGTSAAAPEAAGVFALALEANLGLTWRDMQHLTVLTSKRNQLHDEVHQWRRNGVGLEFNHLFGYGVLDAGAMVKMAKDWKTVPERFHCVGGSVQDPEKIPSTGKLVLTLTTDACEGKENFVRYLEHVQAVITVNATRRGDLNINMTSPMGTKSILLSRRPRDDDSKVGFDKWPFMTTHTWGEDARGTWTLELGFVGSAPQKGVLKEWTLMLHGTQSAPYIDQVVRDYQSKLAMSKKEELEEELDEAVERSLKSILNKN   AAAGFLFCV_HLA-A02:01
+> ...
+> ```
+> Where the **first column is the peptide sequence**, the **second column is the
+> HLA allele**, the **third column is MHC sequence** and the **fourth column is the
+> name of the file** where you can find that peptide with its negative peptides.
+> 
+> ##### Data insights from the publication
+> This data set consists of the epitope data set from Jurtz et al. combined with multimer validated 
+> epitopes obtained from the IEDB (downloaded 11-04-2020). The data set was filtered to only contain 
+> epitopes of length 8-14, mapped to fully typed HLA molecules covered by all methods included in the 
+> benchmark, and annotated source protein sequence.
+> 
+> Additional SA EL datasets were downloaded. Each dataset SA was 
+> enriched, length-wise, with negative decoy peptides of 5 times the amount of ligands of the most 
+> abundant peptide length.
+> 
+> Finally, to ensure the independent test set’s orthogonality, 
+> positive peptides overlapping with the training data were removed from all test sets. The resulting 
+> benchmark datasets consisted of 1,660 epitopes restricted to 52 distinct MHC-I molecules, and 36 SA 
+> EL datasets covering a total 45,416 MS MHC eluted ligands.
 </details>
 
 ## pHLA stability data
