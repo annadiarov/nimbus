@@ -165,6 +165,56 @@ We provide the raw data from the supplementary information. It contains:
 > EL datasets covering a total 45,416 MS MHC eluted ligands.
 </details>
 
+### MixMHCpred 2.2
+
+Data from Gfeller et al. (2023) is publicly available at the [supplementary
+information](https://www.nature.com/articles/s41586-021-03819-2#Sec19) associated
+with the publication.
+
+According to the license, this data is only for academic use. Please contact the
+authors of the original publication for commercial use.
+
+Gfeller, D.; Schmidt, J.; Croce, G.; Guillaume, P.; Bobisse, S.; Genolet, R.; 
+Queiroz, L.; Cesbron, J.; Racle, J.; Harari, A. Improved Predictions of Antigen 
+Presentation and TCR Recognition with MixMHCpred2.2 and PRIME2.0 Reveal Potent 
+SARS-CoV-2 CD8+ T-Cell Epitopes. _Cell Syst._ **2023**, 14, 72-83.e5. 
+[![DOI:10.1016/j.cels.2022.12.002](https://zenodo.org/badge/DOI/10.1007/978-3-319-76207-4_15.svg)](https://doi.org/10.1016/j.cels.2022.12.002)
+
+<details>
+
+<summary><strong>Data description</strong></summary>
+
+We provide the raw data from the supplementary information. It contains:
+
+> #### Train data
+> The training data is contained in the file `train_2023_MixMHCpred2.2.csv`. It
+> corresponds to the Table S2 in the supplementary information and it has the 
+> list of HLA-I ligands used to train MixMHCpred2.2
+> 
+> The file has the following format:
+> ```text
+> Peptide	Allele
+> AAAHTHRY	A0101
+> ADMGHLKY	A0101
+> AIDNPLHY	A0101
+> ...
+> ```
+> Where the **first column is the peptide sequence** and the **second column is the
+> HLA allele**.
+> 
+> ##### Data insights from the publication
+> They collected data from 24 different sources (see Table S1 in the publication
+> supplementary information). 
+> All peptides-HLA alleles were processed with the motif deconvolution tool MixMHCp.
+> MixMHCp is an unsupervised algorithm that assigns peptide from MS peptidomic 
+> data to its cognate HLA allale. Samples with low confidence were removed from the
+> training set by the authors.
+> 
+> This resulted in a training set covering 119 HLA-I alleles, supported by a 
+> total of 384,070 peptides 
+
+</details>
+
 ## pHLA stability data
 
 ### NetMHCstabpan
