@@ -187,8 +187,8 @@ SARS-CoV-2 CD8+ T-Cell Epitopes. _Cell Syst._ **2023**, 14, 72-83.e5.
 We provide the raw data from the supplementary information. It contains:
 
 > #### Train data
-> The training data is contained in the file `train_2023_MixMHCpred2.2.csv`. It
-> corresponds to the Table S2 in the supplementary information and it has the 
+> The training data is contained in the file `train_2023_MixMHCpred2.2.txt`. It
+> corresponds to the Table S2 in the supplementary information, and it has the 
 > list of HLA-I ligands used to train MixMHCpred2.2
 > 
 > The file has the following format:
@@ -212,7 +212,108 @@ We provide the raw data from the supplementary information. It contains:
 > 
 > This resulted in a training set covering 119 HLA-I alleles, supported by a 
 > total of 384,070 peptides 
+> 
+> ⚠️ Notice that this training set does not include negative peptides, since
+> MixMHCpred2.2 is an heuristic method that does not require negative peptides.
 
+> #### Test data
+> The test data is contained in the folder `test_2023_MixMHCpred2.2`. It
+> corresponds to the Table S3 in the supplementary information.
+> 
+> The data was transformed from the original xlsx to a CSV as follows:
+> ```python
+> import pandas as pd # requires optinal dependeciy openpyxl
+>
+> def excel_to_csv(input_excel_file, output_csv_folder):
+>    # Read the Excel file
+>    xls = pd.ExcelFile(input_excel_file)
+>
+>    # Iterate through each sheet in the Excel file
+>    for sheet_name in xls.sheet_names:
+>        # Read the sheet into a DataFrame
+>        df = xls.parse(sheet_name)
+>
+>        # Create a CSV file for each sheet
+>        output_csv_file = f"{output_csv_folder}/{sheet_name}.csv"
+>        df.to_csv(output_csv_file, index=False, header=False)
+>
+>        print(f"Sheet '{sheet_name}' converted to CSV: {output_csv_file}")
+>
+> # Example usage
+> input_excel_file = 'val_2023_MixMHCpred2.2.xlsx'
+> output_csv_folder = 'val_2023_MixMHCpred2.2'
+> excel_to_csv(input_excel_file, output_csv_folder)
+> ```
+> 
+> The ten files in the folder have the following format: XXXX-L*_I.csv (where X
+> is a number and L a letter) come from 
+> [Gfeller et al. 2018](https://doi.org/10.4049/jimmunol.1800914). The remaining
+> 11 files come with format XXXX\*LX\*.csv come from 
+> [Pyke et al. 2023](https://doi.org/10.1016/j.mcpro.2023.100506).
+> 
+> The file has the following format:
+> ```text
+> Sequence,Length,MixMHCpred2.0.2,MixMHCpred2.2,NetMHCpan4.1,MHCflurry2.0,HLAthena,Ligand
+> FPDTPLAL,8,2,0.0591461,0.019,0.07783,0.05,1
+> PNHVEHTL,8,62,9.31695,0.695,14.27704,0.9278,1
+> ...
+> GKAARIQC,8,98,39.9603,68.75,99.2866,16.61503,0
+> GESAWNLE,8,100,65.6608,68.333,99.2866,12.51793,0
+> ...
+> ```
+> 
+> Where the **first column is the peptide sequence**, the **second column is the
+> peptide length**, the **third column is the MixMHCpred2.0.2 score**, the **fourth
+> column is the MixMHCpred2.2 score**, the **fifth column is the NetMHCpan4.1 score**,
+> the **sixth column is the MHCflurry2.0 score**, the **seventh column is the HLAthena
+> score** and the **eighth column is the ligand label** (1 ligand, 0 non-ligand).
+> 
+> The peptide final score obtained by an HLA-I ligand predictors is expressed 
+> as a %rank, which represents how the predicted binding of a peptide ranks
+> compares with the one of random peptides from the human proteome (the smaller
+> the %rank the better the binding (ie. it's in the top_rank% respect to the 
+> random peptides)). 
+> 
+> ##### Data insights from the publication
+>  In total the test set contains **78,011 HLA-I positive case ligands**. 
+> 
+> ⚠️ **4-fold excess of randomly selected peptides** from the human proteome were
+> used as negatives to compute receiver operating curves (ROCs) and positive 
+> predictive values (PPVs) 
+> 
+> **Warning:** It seems that the data they used to test is not monoallelic. 
+> The possible HLA is not included, but I found the following information in the
+> reference data publications:
+> 
+> | Filename    | HLA-A | HLA-A | HLA-B | HLA-B | HLA-C | HLA-C |
+> |-------------|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
+> | 3779-AMM_I  | A0201 | B3503 | B3508 |       | C0401 |       |
+> | 3795-BMT_I  | A0201 | A2601 | B0702 | B3901 | C0702 | C1203 |
+> | 3803-RE_I   | A0201 | A1101 | B3508 | B5101 | C0401 | C1502 |
+> | 3805-RV_I   | A0206 | A0301 | B3501 | B5101 | C0401 | C1502 |
+> | 3808-HMC_I  | A0201 | A2601 | B0801 | B1401 | C0701 | C0802 |
+> | 3869-GA_I   | A0201 | A2402 | B1501 |       | C0304 | C0401 |
+> | 3947-GA_I   | A0301 | A2402 | B1501 | B3906 | C0303 | C0702 |
+> | 3971-ORA_I  | A1101 | A2501 | B4402 | B5001 | C0501 | C0602 |
+> | 4001_I      | A0201 | A2601 | B5101 | B3801 | C0102 | C1203 |
+> | 4037-DC_I   | A0301 | A6801 | B3501 | B4402 | C0401 | C0704 |
+> | 124768B1    | A2402 | A2501 | B1801 | B3801 | C1203 | C1203 |
+> | 1071227F    | A1101 | A6802 | B0801 | B5301 | C0401 | C0701 |
+> | 1180402F    | A0301 | A6801 | B1803 | B3508 | C0401 | C0701 |
+> | 117794A1    | A2402 | A2501 | B0702 | B1801 | C0701 | C0702 |
+> | 30686B1     | A0101 | A2501 | B5101 | B5701 | C0602 | C1402 |
+> | 1114162F    | A2601 | A6802 | B1402 | B2705 | C0802 | C1203 |
+> | 1183384F    | A0301 | A0301 | B1805 | B3503 | C0401 | C1203 |
+> | 1160324F    | A0203 | A1101 | B1502 | B4601 | C0102 | C0801 |
+> | 122716A1    | A2501 | A3001 | B1302 | B2705 | C0202 | C0602 |
+> | 1134036F    | A0301 | A2402 | B3502 | B4402 | C0401 | C0501 |
+> | 1070865F    | A3201 | A6801 | B4001 | B5101 | C0304 | C1502 |
+> 
+> Source first 10 files: [Gfeller et al. 2018](https://doi.org/10.4049/jimmunol.1800914)
+> [Supplementary Table II](https://journals.aai.org/jimmunol/article-supplement/106932/xlsx/ji_1800914_supplemental_table_2/)
+>
+> Source last 11 files: [Pyke et al. 2023](https://doi.org/10.1016/j.mcpro.2023.100506)
+> [Supplementary Table 5](https://www.mcponline.org/cms/10.1016/j.mcpro.2023.100506/attachment/e29a43ab-3975-4f1c-bf9f-3db090b8aa1f/mmc6.xlsx)
 </details>
 
 ## pHLA stability data
