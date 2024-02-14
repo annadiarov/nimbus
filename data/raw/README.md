@@ -410,6 +410,13 @@ SARS-CoV-2 CD8+ T-Cell Epitopes. _Cell Syst._ **2023**, 14, 72-83.e5.
 > ...
 > ```
 
+> #### Test data
+> They performed multiple cross-validations based on:
+> - Randomly splitting the data (standard 10-fold cross-validation), 
+> - Iteratively excluding specific alleles (leave-one-allele-out cross-validation)
+> - Iteratively excluding data from specific studies (leave-one-study-out cross-validation)
+> - They also restricted their benchmark to peptides experimentally tested (i.e., excluding random negatives from the test sets)
+
 </details>
 
 ## Neoantigen immunogenicity data
