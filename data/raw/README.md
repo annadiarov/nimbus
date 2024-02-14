@@ -222,6 +222,7 @@ We provide the raw data from the supplementary information. It contains:
 > 
 > The data was transformed from the original xlsx to a CSV as follows:
 > ```python
+> import os
 > import pandas as pd # requires optinal dependeciy openpyxl
 >
 > def excel_to_csv(input_excel_file, output_csv_folder):
@@ -242,6 +243,7 @@ We provide the raw data from the supplementary information. It contains:
 > # Example usage
 > input_excel_file = 'val_2023_MixMHCpred2.2.xlsx'
 > output_csv_folder = 'val_2023_MixMHCpred2.2'
+> os.makedirs(output_csv_folder, exist_ok=True)
 > excel_to_csv(input_excel_file, output_csv_folder)
 > ```
 > 
