@@ -334,7 +334,83 @@ Stability, a Correlate of T Cell Immunogenicity. *J. Immunol.* **2016**, 197, 15
 
 ## TCR-pMHC recognition data
 
+Data from Gfeller et al. (2023) is publicly available at the [supplementary
+information](https://www.nature.com/articles/s41586-021-03819-2#Sec19) associated
+with the publication.
 
+According to the license, this data is only for academic use. Please contact the
+authors of the original publication for commercial use.
+
+
+Gfeller, D.; Schmidt, J.; Croce, G.; Guillaume, P.; Bobisse, S.; Genolet, R.; 
+Queiroz, L.; Cesbron, J.; Racle, J.; Harari, A. Improved Predictions of Antigen 
+Presentation and TCR Recognition with MixMHCpred2.2 and PRIME2.0 Reveal Potent 
+SARS-CoV-2 CD8+ T-Cell Epitopes. _Cell Syst._ **2023**, 14, 72-83.e5. 
+[![DOI:10.1016/j.cels.2022.12.002](https://zenodo.org/badge/DOI/10.1007/978-3-319-76207-4_15.svg)](https://doi.org/10.1016/j.cels.2022.12.002)
+
+
+<details>
+
+<summary><strong>Data description</strong></summary>
+
+
+> #### Train data
+> The training data is contained in the file `train_2023_PRIME2.0.csv`. 
+> It corresponds to the Table S4 in the supplementary information, which 
+> contains the List of immunogenic and non-immunogenic peptides used to train PRIME2.0.
+> 
+> The file has the following format:
+> ```text
+> Mutant,Allele,MixMHCpred,NetMHCpan,MHCflurry,HLAthena,PRIME1.0,Immunogenicity,SourceProt,Random 
+> VMLQAPLFT,A0201,4.44635,2.323,1.32054,8.40544,100,0,ANKIB1,0 
+> MLIVETAVM,A0201,3.50576,2.504,1.41484,8.4011,100,0,ANKIB1,0
+> ...
+> ```
+> Where the **first column is the peptide sequence**, the **second column is the
+> HLA allele**, the **third column is the MixMHCpred score**, the **fourth column
+> is the NetMHCpan score**, the **fifth column is the MHCflurry score**, the **sixth
+> column is the HLAthena score**, the **seventh column is the PRIME1.0 score**,
+> the **eighth column is the immunogenicity label** (0 non-immunogenic, 100 immunogenic), 
+> the **ninth column is the source protein** and the **tenth column specifies if the
+> sequence was randomly generated**.
+> 
+> ##### Data insights from the publication
+> They collected from 70 recent neo-antigen studies. This resulted in 596 verified 
+> immunogenic neo-epitopes, as well as 6,084 non-immunogenic peptides tested 
+> experimentally.
+> 
+> ⚠️ Most of the immunogenic and non-immunogenic peptides in those studies were 
+> previously selected based on HLA-I ligand predictors and, as a result, show 
+> much higher predicted binding to HLA-I compared with random peptides. 
+> To correct for this bias in their data, they further included for each 
+> neo-epitope 99 peptides randomly selected from the same source protein as
+> additional negatives.
+> 
+> ##### About PRIME2.0
+> PRIME2.0 is based on a neural network and uses as input features:
+>
+>   1. The predicted HLA-I presentation score (−log(%rank) of MixMHCpred2.2),
+>   2. The amino acid frequency at positions with minimal impact on binding to HLA-I and more likely to face the TCR 
+>   3. The length of the peptide
+> 
+> ##### Comparison with PRIME1.0 training set
+> The training set of PRIME2.0 is more realistic than the PRIME1.0 training set
+> in terms of predicted HLA-I binding of the negatives (i.e., broad coverage of 
+> the range of %rank values without enrichment in predicted ligands). Moreover, 
+> the use of neural networks can capture potential correlations between different
+> input features.
+> 
+> We also provide this training set in the file `train_2020_PRIME1.0.csv` from 
+> [Schmidt et al. (2021)](https://doi.org/10.1016/j.xcrm.2021.100194), which has
+> the folllowing format:
+> ```text
+> Mutant,Allele,MixMHCpred,NetMHCpanEL,NetMHCpanBA,NetMHCpanBA_Kd,NetMHCstabpan,NetMHCstabpan_T12,MHCflurry,HLAthena,NetChop,TAP,IEDB,Foreignness,WT_peptide,NetMHCpanEL_WT,NetMHCpanBA_Kd_WT,ratio_%rank,ratio_Kd,DisToSelf,DisToSelf_peptide,Immunogenicity,StudyOrigin,PRIME
+> VMLQAPLFT,A0201,7,2.391,2.193,356.05,8.5,0.54,0.8535,8.40544,0.03431,-0.35,-0.03346,0,DMLQAPLFT,12.165,10345.08,1.6268512877593,0.0344173268838907,9,DMLQAPLFT,0,Bobisse,0
+> MLIVETAVM,A0201,7,1.936,1.61,206.86,9,0.53,1.335,8.4011,0.90141,0.301,0.27592,0,MLIVETADM,3.475,569.1,0.58497049016237,0.363486206290634,9,MLIVETADM,0,Bobisse,0
+> ...
+> ```
+
+</details>
 
 ## Neoantigen immunogenicity data
 
