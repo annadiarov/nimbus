@@ -217,7 +217,7 @@ We provide the raw data from the supplementary information. It contains:
 > MixMHCpred2.2 is an heuristic method that does not require negative peptides.
 
 > #### Test data
-> The test data is contained in the folder `test_2023_MixMHCpred2.2`. It
+> The test data is contained in the folder `val_2023_MixMHCpred2.2`. It
 > corresponds to the Table S3 in the supplementary information.
 > 
 > The data was transformed from the original xlsx to a CSV as follows:
@@ -316,6 +316,7 @@ We provide the raw data from the supplementary information. It contains:
 >
 > Source last 11 files: [Pyke et al. 2023](https://doi.org/10.1016/j.mcpro.2023.100506)
 > [Supplementary Table 5](https://www.mcponline.org/cms/10.1016/j.mcpro.2023.100506/attachment/e29a43ab-3975-4f1c-bf9f-3db090b8aa1f/mmc6.xlsx)
+> This table has been manually copied as `val_2023_MixMHCpred2.2_alleles_by_file.tsv`.
 </details>
 
 ## pHLA stability data
