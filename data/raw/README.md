@@ -422,3 +422,78 @@ SARS-CoV-2 CD8+ T-Cell Epitopes. _Cell Syst._ **2023**, 14, 72-83.e5.
 
 ## Neoantigen immunogenicity data
 
+Data from Müller et al. (2023) is publicly available at the publication's [Data availability
+section](https://www.cell.com/immunity/fulltext/S1074-7613(23)00406-5?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS1074761323004065%3Fshowall%3Dtrue#sectitle0030).
+
+Müller, M.; Huber, F.; Arnaud, M.; Kraemer, A. I.; Altimiras, E. R.; Michaux, J.;
+Taillandier-Coindard, M.; Chiffelle, J.; Murgues, B.; Gehret, T.; Auger, A.; 
+Stevenson, B. J.; Coukos, G.; Harari, A.; Bassani-Sternberg, M. 
+Machine Learning Methods and Harmonized Datasets Improve Immunogenic Neoantigen 
+Prediction. Immunity 2023, 56, 2650-2663.e6.
+[![DOI:10.1016/j.immuni.2023.09.002](https://zenodo.org/badge/DOI/10.1007/978-3-319-76207-4_15.svg)](https://doi.org/10.4049/jimmunol.1600582)
+
+<details>
+
+<summary><strong>Data description</strong></summary>
+
+For memory space reasons, we provide a reduced version of the original data from
+the Data section (https://figshare.com/s/147e67dde683fb769908). It contains:
+
+> #### Train and test data
+> The training and test data is contained in the files `Neopep_data_org_train.csv` and,
+> `Neopep_data_org_test.csv` respectively.
+> The train dataset contains data from one external study (NCI) while the test
+> dataset has information from one external study (TESLA) and one in-house study from 
+> the paper authors (HiTIDe):
+>
+> - **NCI dataset** ([Gartner et al.](https://doi.org/10.1038/s43018-021-00197-6)):
+> Many mutations and neo-peptides were physically screened in a cohort of 112 
+> patients. For almost all the expressed mutations, minigenes encoding the mutations
+> and 12 flanking wild-type (WT) aa on each side were transcribed in vitro and 
+> transfected into autologous antigens presenting cells (APCs) followed by a 
+> co-culture with TIL cultures and interferon (IFN)-γ enzyme-linked immunospot
+> (ELISpot) immunogenicity measurement.
+> For 80 of the 112 patients, additional immunogenicity screens were performed 
+> to identify the optimal neo-antigenic epitopes and their HLA restrictions. The
+> top-ranked neo-peptides predicted by NetMHCpan to span immunogenic mutations 
+> from the above mini-gene assay were pulsed on autologous APCs or APCs engineered 
+> to express the patient’s HLA-I alleles, prior to co-culture with TILs and IFN-γ
+> ELISpot readout. Neo-peptides with positive ELISpot readout were assigned as 
+> immunogenic. **All other neo-peptides containing the immunogenic mutation and all 
+> neo-peptides containing screened non-immunogenic mutations were considered as
+> non-immunogenic.**
+>   - ⚠️ **WARNING:** They only predicted immunogenicity for the best binding neo-peptides
+>        according to NetMHCpan, and not for all possible neo-peptides.
+> - **TESLA dataset** ([Wells et al.](https://doi.org/10.1016/j.cell.2020.09.015)): 
+> It contains data for 8 patients (five with skin cutaneous melanoma, and three with NSCLC).
+> The immunogenicity of selected neo-peptides was determined with labeling of 
+> subject-matched TILs or peripheral blood mononuclear cells (PBMCs) with HLA-I 
+> peptide multimers. 
+> Müller et al. inferred annotations for the mutations from annotations of the 
+> neo-peptides, where a mutation is called immunogenic when at least one of its 
+> neo-peptides was reported as immunogenic, non-immunogenic when at least one of
+> its neo-peptides was screened but none was found to be not immunogenic,
+> and not screened otherwise.
+>   - ⚠️ **WARNING:** Only a selection of neo-peptides was experimentally screened. 
+>   The ones that were not tested were considered non-immonogenic.
+> - **HiTIDe dataset** (from the reference paper):  
+> The study included 11 patients with metastatic melanoma, lung, kidney, and stomach cancers.
+> The immunogenicity of selected neo-peptides in the HiTIDe cohort was interrogated
+> with IFN-γ ELISpot assays following incubation of the peptides with either bulk
+> TILs or neoantigen enriched TILs (NeoScreen method) grown from tumor biopsies 
+> in the presence of APCs loaded with neo-peptides. 
+>   - ⚠️ **WARNING:** Only a selection of neo-peptides was experimentally screened. 
+>   The ones that were not tested were considered non-immonogenic.
+> 
+> The file has the following format:
+> ```text
+> patient	dataset	train_test	response_type	Nb_Samples	Sample_Tissue	Cancer_Type	chromosome	genomic_coord	ref	alt	gene	protein_coord	aa_mutant	aa_wt	mutant_seq	wt_seq	pep_mut_start	TumorContent	mutation_type	Zygosity	mutant_best_alleles	wt_best_alleles	mutant_best_alleles_netMHCpan	mutant_other_significant_alleles_netMHCpan	wt_best_alleles_netMHCpan	mutant_rank	mutant_rank_netMHCpan	mutant_rank_PRIME	mut_Rank_Stab	TAP_score	mut_netchop_score_ct	mut_binding_score	mut_is_binding_pos	mut_aa_coeff	DAI_NetMHC	DAI_MixMHC	DAI_NetStab	mutant_other_significant_alleles	DAI_MixMHC_mbp	rnaseq_TPM	rnaseq_alt_support	GTEx_all_tissues_expression_mean	Sample_Tissue_expression_GTEx	TCGA_Cancer_expression	bestWTMatchScore_I	bestWTMatchOverlap_I	bestMutationScore_I	bestWTPeptideCount_I	bestWTMatchType_I	CSCAPE_score	Clonality	CCF	nb_same_mutation_Intogen	mutation_driver_statement_Intogen	gene_driver_Intogen	seq_len
+> 4278	NCI	train	negative		Colon	Colon Adenocarcinoma	16	19718494.0	T	G	KNOP1	372.0	P	Q	DPKLKFLRL	DQKLKFLRL	2.0	0.33	SNV	HET	B0801	B0801	B0801	B1401	B0801	0.02	0.006	0.01	2.5	0.048	0.93382	-0.0088407261858941	True	-1.5	-0.9162907318741551	0.0	0.5108256237659906	1	0.0	34.6839	24.14	3.628448275862069	3.38	17.748463778707407	9.0	1.0	1.0	26	EXACT	0.708244	clonal	0.8768072885719944				9
+> ...
+> ```
+> Where the **first column is the patient ID**, the **second column is the dataset**,
+> the **third column is the train/test split** and the **fourth column is the response 
+> type (ie. immunogenicity)** (CD8 (ie. positive)/negative/not_tested).
+> 
+> Patient HLAs are found in `HLA_allotypes.txt` file.
+</details>
