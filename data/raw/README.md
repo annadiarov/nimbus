@@ -333,7 +333,7 @@ Nielsen, M.; Buus, S. Pan-Specific Prediction of Peptide–MHC Class I Complex
 Stability, a Correlate of T Cell Immunogenicity. *J. Immunol.* **2016**, 197, 1517–1524.
 [![DOI:10.4049/jimmunol.1600582](https://zenodo.org/badge/DOI/10.1007/978-3-319-76207-4_15.svg)](https://doi.org/10.4049/jimmunol.1600582)
 
-## TCR-pMHC recognition data
+## T-Cell-pMHC recognition data
 
 Data from Gfeller et al. (2023) is publicly available at the [supplementary
 information](https://www.nature.com/articles/s41586-021-03819-2#Sec19) associated
