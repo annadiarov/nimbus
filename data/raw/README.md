@@ -64,7 +64,7 @@ We provide the raw data from the supplementary information. It contains:
 >  the MHC allele** (for single allele data) while the **second column is the
 >  list of alleles**. 
 > 
->  ⚠️ The names in the first column are the ones that will appear in `coo*_*` 
+>  ⚠️ The names in the first column are the ones that will appear in `c00*_*` 
 >  files (below), which contain peptide-MHC pairs with their affinity. When the 
 >  pair comes from a Multi-allelic experiment, we will find the cell line name
 >  instead of the MHC allele name.
