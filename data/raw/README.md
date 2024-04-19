@@ -69,53 +69,57 @@ We provide the raw data from the supplementary information. It contains:
 >  pair comes from a Multi-allelic experiment, we will find the cell line name
 >  instead of the MHC allele name.
 > - 5 files (`c00*_ba`) containing binding affinity data for different length peptides
->   - 5 files (`c00*_el`) containing eluted ligand data for different length peptides
+> - 5 files (`c00*_el`) containing eluted ligand data for different length peptides
 > 
->     These 10 files have the following format:
->     ```text
->     # Binding affinity sample data
->     AAFTNHNYI 0.439534 H-2-Kb
->     AAFTNHNYI 0.806158 H-2-Db
->     AAGIGILTV 0.550126 HLA-A02:01
->     AAGIGILTVI 0.203084 HLA-A02:01
->     AAHARFVAA 0.0545091 HLA-A11:01
->     AAHARFVAA 0.171722 HLA-A24:02
->     # Eluted ligand sample data
->     TEAARELGY 1 HLA-B44:03
->     ATDYPLIAR 1 pat-FL
->     RQPDSGISSI 1 pat-NS2
->     SVDIDSEL 1 Line.27
->     DGDEDLPGPPVRYY 1 HLA-A01:01
->     ```
->     The **first column is the peptide sequence**, the **second column is the binding
->     affinity (μM)** and the **third column is the HLA allele**. The **eluted ligand data**
->     is the **same, but the second column is the number of times the peptide was
->     observed in the eluted ligand data** and in the **third column** we will find
->     the **cell line _when_ the data comes from multi-allelic assays**.
+>  These 10 files have the following format:
+>  ```text
+>  # Binding affinity sample data
+>  AAFTNHNYI 0.439534 H-2-Kb
+>  AAFTNHNYI 0.806158 H-2-Db
+>  AAGIGILTV 0.550126 HLA-A02:01
+>  AAGIGILTVI 0.203084 HLA-A02:01
+>  AAHARFVAA 0.0545091 HLA-A11:01
+>  AAHARFVAA 0.171722 HLA-A24:02
+>  # Eluted ligand sample data
+>  TEAARELGY 1 HLA-B44:03
+>  ATDYPLIAR 1 pat-FL
+>  RQPDSGISSI 1 pat-NS2
+>  SVDIDSEL 1 Line.27
+>  DGDEDLPGPPVRYY 1 HLA-A01:01
+>  ```
+>  The **first column is the peptide sequence**, the **second column is the binding
+>  affinity _scaled_ between 0 and 1** and the **third column is the HLA allele**. The **eluted ligand data**
+>  is the **same, but the second column is the number of times the peptide was
+>  observed in the eluted ligand data** and in the **third column** we will find
+>  the **cell line _when_ the data comes from multi-allelic assays**.
 >
->     True binders are those with a binding affinity below 500 nM (0.5 μM, threshold used
->     in the publication) and eluted ligands above 1.
+>  True binders were considered those with a binding affinity below 500 nM (0.5 μM, threshold used
+>  in the publication) and eluted ligands above 1.
+>  ⚠️ For binding affinity data, the threshold for the scaled affinities
+>  seems to be scaled_binding_affinity >= 0.426 for binders. Notice this value was a
+>  manually obtained threshold to get the same number of binders that are in the
+>  paper supplementary data.
 >   
->    ⚠️ Binding affinity data with affinity = 0.0 μM are artificial negative peptides.
->    Similarly happens with eluted ligand data with 0 observed peptides. See 
->    section below for more information about negative peptides.
+> ⚠️ Binding affinity data with affinity = 0.0 μM are artificial negative peptides.
+> Similarly happens with eluted ligand data with 0 observed peptides. See 
+> section below for more information about negative peptides.
 >   
->     ##### Data insights from the publication
->     All peptides employed in the training were filtered to only include 8 to 14 amino acid long peptides. All
->     MHCs present in the Binding Affinity (BA) subset were enriched with 100 random negative sequences (target value of 
->     0.01). On the other hand, positive peptides for each MHC present in the EL subset were enriched, 
->     length-wise, with 5 times the amount of peptides of the most abundant peptide length.
->     More in detail, the amount of random negatives was imposed to be the same for 
->     each length 8–13, and corresponded for each length to five times the amount 
->     of positives for the most abundant peptide length. This uniform length distribution 
->     of the random negatives was adopted as a background against which machine 
->     learning can be employed to learn the amino acid and length preference of the natural binders.
->     (Soruce: [Alvarez et al. (2018)](https://doi.org/10.1002/pmic.201700252))
+>  ##### Data insights from the publication
+>  All peptides employed in the training were filtered to only include 8 to 14 amino acid long peptides. All
+>  MHCs present in the Binding Affinity (BA) subset were enriched with 100 random negative sequences (target value of 
+>  0.01). On the other hand, positive peptides for each MHC present in the EL subset were enriched, 
+>  length-wise, with 5 times the amount of peptides of the most abundant peptide length.
+>  More in detail, the amount of random negatives was imposed to be the same for 
+>  each length 8–13, and corresponded for each length to five times the amount 
+>  of positives for the most abundant peptide length. This uniform length distribution 
+>  of the random negatives was adopted as a background against which machine 
+>  learning can be employed to learn the amino acid and length preference of the natural binders.
+>  (Soruce: [Alvarez et al. (2018)](https://doi.org/10.1002/pmic.201700252))
 > 
->    ###### Generation of negative peptides
->    As described in [Jurtz et al. (2017)](https://doi.org/10.4049/jimmunol.1700893),
->    negative peptides were generated by randomly sampling 8-14 aminoacids peptides
->    from the source antigen protein (using UniProt sequences)
+> ###### Generation of negative peptides
+> As described in [Jurtz et al. (2017)](https://doi.org/10.4049/jimmunol.1700893),
+> negative peptides were generated by randomly sampling 8-14 aminoacids peptides
+> from the source antigen protein (using UniProt sequences)
 >   
 
 > #### Test data
