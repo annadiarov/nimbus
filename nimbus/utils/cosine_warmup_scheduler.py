@@ -9,20 +9,22 @@ import torch.optim as optim
 class CosineWarmupScheduler(optim.lr_scheduler._LRScheduler):
     def __init__(self, optimizer: optim.Optimizer,
                  warmup: int,
-                 max_iters: int):
+                 n_iterations_cycle: int):
         """
-        Cosine learning rate scheduler with warmup.
+        Cosine learning rate scheduler with warmup. The learning rate is increased
+        linearly from 0 to the initial learning rate during the warmup period.
+        After the warmup period, the learning rate follows a cosine annealing
+        schedule which is restarted every `n_iterations_cycle` epochs.
         :param optimizer: optim.Optimizer
             The optimizer for which to schedule the learning rate.
         :param warmup: int
             Number of warmup iterations to gradually increase the learning rate
             to the initial learning rate.
-        :param max_iters:
-            Maximum number of iterations.  It is used to calculate the learning
-            rate factor based on the cosine annealing schedule.
+        :param n_iterations_cycle: int
+            The number of epochs between two warm restarts.
         """
         self.warmup = warmup
-        self.max_num_iters = max_iters
+        self.ti = n_iterations_cycle
         super().__init__(optimizer)
 
     def get_lr(self):
@@ -31,13 +33,13 @@ class CosineWarmupScheduler(optim.lr_scheduler._LRScheduler):
 
     def get_lr_factor(self, epoch: int) -> float:
         """
-        Get the learning rate for the given epoch.
+        Get the learning rate factor for the given epoch.
         :param epoch: int
             The epoch for which to get the learning rate factor.
         :return:
-            The learning rate for the given epoch.
+            The learning rate factor for the given epoch.
         """
-        lr_factor = 0.5 * (1 + np.cos(np.pi * epoch / self.max_num_iters))
+        lr_factor = 0.5 * (1 + np.cos(np.pi * epoch / self.ti))
         if epoch <= self.warmup:
             lr_factor *= epoch * 1.0 / self.warmup
         return lr_factor
