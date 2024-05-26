@@ -104,8 +104,8 @@ class pHLABindingPredictor(L.LightningModule):
 
         self.to_pred = nn.Sequential(
             Reduce('... n d -> ... d', 'mean'),
-            nn.LayerNorm(self.hparams.model_dim),
-            nn.Linear(self.hparams.model_dim, 1),
+            nn.LayerNorm(self.hparams.filip_num_heads),
+            nn.Linear(self.hparams.filip_num_heads, 1),
             Rearrange('... 1 -> ...')
         )
 
@@ -129,8 +129,8 @@ class pHLABindingPredictor(L.LightningModule):
         p = self.p_ln(p)
         for p_self_attns in self.p_self_attns: p = p_self_attns(p)
 
-        h_mask = torch.ones((1, 400)).bool().to(DEVICE)
-        p_mask = torch.ones((1, self.hparams.pep_embedding_dim)).bool().to(DEVICE)
+        h_mask = torch.ones((1, self.hparams.hla_n_fp)).bool().to(DEVICE)
+        p_mask = torch.ones((1, self.hparams.pep_seq_len)).bool().to(DEVICE)
 
         for cross_attn in self.joint_cross_attns:
             h, p = cross_attn(h, context=p, context_mask=p_mask)
