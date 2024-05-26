@@ -9,7 +9,7 @@ setup(
     # license="MIT",
     keywords="cancer vaccines, neoantigens, immunogenicity, machine learning",
     url="https://github.com/annadiarov/nimbus",
-    packages=find_packages(exclude=('tests', 'docs')),
+    packages=find_packages(exclude=('tests', 'docs','data', 'notebooks')),
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
