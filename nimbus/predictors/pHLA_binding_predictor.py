@@ -116,10 +116,8 @@ class pHLABindingPredictor(L.LightningModule):
         nn.init.normal_(self.p_pe, std=0.01)
         nn.init.normal_(self.h_pe, std=0.01)
 
-    def forward(self, x):
-        h, p = x[:, :, :-15], x[:, :, -15:]
-
-        h = h.reshape(-1, 400, 80)
+    def forward(self, p, h):
+        #h = h.reshape(-1, self.hparams.hla_n_fp, self.hparams.hla_fp_dim)
         h = h + self.h_pe
         h = self.h_ln(h)
         for h_self_attns in self.h_self_attns: h = h_self_attns(h)
@@ -133,18 +131,18 @@ class pHLABindingPredictor(L.LightningModule):
         p_mask = torch.ones((1, self.hparams.pep_seq_len)).bool().to(DEVICE)
 
         for cross_attn in self.joint_cross_attns:
-            h, p = cross_attn(h, context=p, context_mask=p_mask)
+            h, p = cross_attn(h, context=p, mask=h_mask, context_mask=p_mask)
 
         x = self.filip(h, p, context_mask=p_mask)
 
         return x
 
     def _calculate_loss(self, batch, mode="train"):
-        inp_data, labels = batch
+        peptide_data, hla_data, labels = batch
         batch_pos_idx = torch.where(labels == 1.)
         batch_neg_idx = torch.where(labels == 0.)
         # Perform prediction and calculate loss and accuracy
-        logits = self.forward(inp_data)
+        logits = self.forward(peptide_data, hla_data)
         logits = self.linear_to_logits(logits)
         logits = self.to_pred(logits)
 
