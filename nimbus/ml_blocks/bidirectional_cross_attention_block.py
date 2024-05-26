@@ -91,8 +91,7 @@ class BidirectionalCrossAttentionBlock(nn.Module):
             mask = default(mask,
                            torch.ones((b, i), device=device, dtype=torch.bool))
             context_mask = default(context_mask,
-                                   torch.ones((b, j), device=device,
-                                              dtype=torch.bool))
+                                   torch.ones((b, j), device=device, dtype=torch.bool))
 
             attn_mask = rearrange(mask, 'b i -> b 1 i 1') * rearrange(
                 context_mask, 'b j -> b 1 1 j')
