@@ -170,6 +170,10 @@ if __name__ == '__main__':
 
     # Parse arguments
     config = parse_args()
+    # Add some globals to the config # TODO Check if this is necessary
+    config['device'] = DEVICE
+    config['seed'] = SEED
+    config['n_workers'] = N_WORKERS
     # TODO Check if the config_dict is correct
     logger.debug(f'Parsed Configuration:\n{pformat(config)}')
 
