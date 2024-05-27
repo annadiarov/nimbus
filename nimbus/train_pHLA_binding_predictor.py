@@ -1,7 +1,6 @@
 import os
 import argparse
 from pprint import pformat
-from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import torch
@@ -9,7 +8,7 @@ import lightning as L
 from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping
 
 from nimbus.predictors import pHLABindingPredictor
-from nimbus.globals import DEVICE, CHECKPOINT_PATH, SEED, LOGGER_LEVEL
+from nimbus.globals import DEVICE, CHECKPOINT_PATH, SEED, LOGGER_LEVEL, N_WORKERS
 from nimbus.utils import LoggerFactory, balance_binary_data
 from nimbus.data_processing import pHLADataset
 
@@ -223,11 +222,13 @@ if __name__ == '__main__':
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=config['batch_size'],
+        num_workers=N_WORKERS,
         shuffle=True)
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
         batch_size=config['batch_size'],
-        shuffle=True)
+        num_workers=N_WORKERS,
+        shuffle=False)
 
     model = train_predictor(train_loader,
                             val_loader,

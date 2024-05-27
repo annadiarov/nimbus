@@ -16,3 +16,6 @@ CHECKPOINT_PATH = os.path.join(NIMBUS_BASE_DIR, '..', 'checkpoints')
 
 # Logger
 LOGGER_LEVEL = 'INFO'
+
+# Data
+N_WORKERS = 20 # Number of workers for data loading
