@@ -31,8 +31,13 @@ def parse_args():
     parser.add_argument('--val_data_file',
                         dest='val_data_file',
                         type=str,
+                        default='',
+                        help='File containing validation data. Relative file path to data_dir. If empty, the validation set is splitted from the training set')
+    parser.add_argument('--test_data_file',
+                        dest='test_data_file',
+                        type=str,
                         default='pHLA_binding/NetMHCpan_dataset/test_set_peptides_data_MaxLenPep15_hla_ABC.csv.gz',
-                        help='File containing validation data. Relative file path to data_dir.')
+                        help='File containing test data. Relative file path to data_dir.')
     parser.add_argument('--hla_fp_file',
                         dest='hla_fp_file',
                         type=str,
@@ -44,16 +49,24 @@ def parse_args():
                         default='hla_fingerprints/hla_index_netMHCpan_pseudoseq_res_representation.csv',
                         help='File with HLA allele names and their corresponding indices in `hla_fp_file`')
     # Behavior parameters
-    parser.add_argument('--balance_train',
-                        dest='balance_train',
-                        type=bool,
-                        default=True,
-                        help='Balance the training data by under-sampling the majority class')
-    parser.add_argument('--balance_val',
-                        dest='balance_val',
-                        type=bool,
-                        default=True,
+    parser.add_argument('--balance_train_val',
+                        dest='balance_train_val',
+                        action='store_true',
+                        help='Balance the training and validation data by under-sampling the majority class')
+    parser.add_argument('--balance_test',
+                        dest='balance_test',
+                        action='store_true',
                         help='Balance the validation data by under-sampling the majority class')
+    parser.add_argument('--split_train',
+                        dest='split_train',
+                        action='store_true',
+                        help='Whether to split the training data into training and validation sets. '
+                             'If no validation file is provided, the validation set is split from the training data (this flag will be set as True).')
+    parser.add_argument('--split_ratio',
+                        dest='split_ratio',
+                        type=float,
+                        default=0.8,
+                        help='Ratio of the training data to be used for training')
     # Model parameters
     parser.add_argument('--pep_embedding_dim',
                         dest='pep_embedding_dim',
@@ -195,12 +208,13 @@ if __name__ == '__main__':
     # Load data
     train_file = os.path.join(config['data_dir'], config['train_data_file'])
     val_file = os.path.join(config['data_dir'], config['val_data_file'])
+    test_file = os.path.join(config['data_dir'], config['test_data_file'])
     hla_fp_file = os.path.join(config['data_dir'], config['hla_fp_file'])
     hla_fp_data_file = os.path.join(config['data_dir'], config['hla_fp_data_file'])
     train_peptide_data = pd.read_csv(train_file)
     logger.debug('Loaded training data successfully')
-    val_peptide_data = pd.read_csv(val_file)
-    logger.debug('Loaded validation data successfully')
+    test_peptide_data = pd.read_csv(test_file)
+    logger.debug('Loaded test data successfully')
     # Load df with HLA names as index to get the index of the HLA in the hla_fp
     hla_fp_data = pd.read_csv(hla_fp_data_file,
                               index_col=1,
@@ -212,16 +226,38 @@ if __name__ == '__main__':
     hla_fp_dict = {hla: torch.Tensor(hla_fp[idx]) for hla, idx in hla_fp_data.items()}
     logger.debug(f'Created hla_fp_dict (which should contain HLA allele as key'
                  f'and the corresponding fingerprint as value): \n{pformat(hla_fp_dict)}')
-    if config['balance_train']:
-        logger.debug(f'Balancing training data. Current shape: {train_peptide_data.shape}')
+
+    if config['split_train'] or config['val_data_file'] == '':
+        logger.info(f'Splitting training data into training and validation '
+                    f'sets with ratio {config["split_ratio"]}')
+        config['split_train'] = True  # Update the config to reflect the split
+        # use sklearn train_test_split
+        from sklearn.model_selection import train_test_split
+        train_peptide_data, val_peptide_data = train_test_split(
+            train_peptide_data,
+            test_size=1-config['split_ratio'],
+            random_state=SEED,
+            stratify=train_peptide_data['label'],
+            shuffle=True)
+        logger.info(f'After splitting, training data has shape {train_peptide_data.shape}, '
+                    f'Validation data has shape {val_peptide_data.shape}')
+    else:
+        logger.info(f'Using the provided validation data {config["val_data_file"]}')
+        val_peptide_data = pd.read_csv(val_file)
+
+    if config['balance_train_val']:
+        logger.debug(f'Balancing training and validation data. Current shapes: '
+                     f'{train_peptide_data.shape}, {val_peptide_data.shape}')
         logger.info('Balancing training data')
         train_peptide_data = balance_binary_data(train_peptide_data, 'label', seed=SEED)
-        logger.debug(f'Balanced training data. New shape: {train_peptide_data.shape}')
-    if config['balance_val']:
-        logger.debug(f'Balancing validation data. Current shape: {val_peptide_data.shape}')
-        logger.info('Balancing validation data')
         val_peptide_data = balance_binary_data(val_peptide_data, 'label', seed=SEED)
-        logger.debug(f'Balanced validation data. New shape: {val_peptide_data.shape}')
+        logger.debug(f'Balanced training and validation data. New shapes: '
+                     f'{train_peptide_data.shape}, {val_peptide_data.shape}')
+    if config['balance_test']:
+        logger.debug(f'Balancing test data. Current shape: {test_peptide_data.shape}')
+        logger.info('Balancing test data')
+        test_peptide_data = balance_binary_data(test_peptide_data, 'label', seed=SEED)
+        logger.debug(f'Balanced validation data. New shape: {test_peptide_data.shape}')
 
     # Create datasets
     train_dataset = pHLADataset(peptide_seq_arr=train_peptide_data['peptide'].values,
