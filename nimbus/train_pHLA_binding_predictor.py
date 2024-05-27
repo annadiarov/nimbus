@@ -157,10 +157,10 @@ def train_predictor(train_loader, val_loader, config):
     )
     trainer.logger._default_hp_metric = None  # Optional logging argument that we don't need
 
-    # Check whether pretrained model exists. If yes, load it and skip training
+    # Check whether pretrained model exists. If yes, load it
     if config['pretrained_filename'] is not None and os.path.isfile(config['pretrained_filename']):
-        print("Found pretrained model, loading...")
-        model = pHLABindingPredictor.load_from_checkpoint(config['pretrained_filename'])
+        logger.info(f"Loading pretrained model {config['pretrained_filename']}")
+        model = pHLABindingPredictor.load_from_checkpoint(config['pretrained_filename'], **config)
     else:
         model = pHLABindingPredictor(**config)
 
