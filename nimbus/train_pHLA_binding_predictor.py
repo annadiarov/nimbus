@@ -151,7 +151,7 @@ def train_predictor(train_loader, val_loader, config):
         callbacks=[EarlyStopping(patience=20, monitor='train_loss'), checkpoint_callback],
         accelerator="auto",
         devices=1,
-        max_epochs=-1,
+        max_epochs=config['n_epochs'],
         gradient_clip_val=0.5,
         # fast_dev_run=True,  # For testing
     )
