@@ -6,7 +6,7 @@ import pandas as pd
 import torch
 import lightning as L
 from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping
-
+from lightning.pytorch.loggers import TensorBoardLogger, CSVLogger
 from nimbus.predictors import pHLABindingPredictor
 from nimbus.globals import DEVICE, CHECKPOINT_PATH, SEED, LOGGER_LEVEL, N_WORKERS
 from nimbus.utils import LoggerFactory, balance_binary_data
@@ -145,6 +145,7 @@ def train_predictor(train_loader, val_loader, config):
 
     trainer = L.Trainer(
         default_root_dir=root_dir,
+        logger=[CSVLogger(root_dir), TensorBoardLogger(root_dir)],
         callbacks=[EarlyStopping(patience=20, monitor='train_loss'), checkpoint_callback],
         accelerator="auto",
         devices=1,
