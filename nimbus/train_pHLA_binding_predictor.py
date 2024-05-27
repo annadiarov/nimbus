@@ -145,7 +145,9 @@ def train_predictor(train_loader, val_loader, config):
 
     trainer = L.Trainer(
         default_root_dir=root_dir,
-        logger=[CSVLogger(root_dir), TensorBoardLogger(root_dir)],
+        # Log in different directories so version_X coincide between loggers
+        logger=[CSVLogger(os.path.join(root_dir, 'csv_logger')),
+                TensorBoardLogger(os.path.join(root_dir, 'tensorboard_logger'))],
         callbacks=[EarlyStopping(patience=20, monitor='train_loss'), checkpoint_callback],
         accelerator="auto",
         devices=1,
