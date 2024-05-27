@@ -13,6 +13,7 @@ from nimbus.utils import LoggerFactory, balance_binary_data
 from nimbus.data_processing import pHLADataset
 
 logger = LoggerFactory.get_logger(__name__, LOGGER_LEVEL)
+torch.set_float32_matmul_precision('medium')  # or 'high' or 'low'
 
 
 def parse_args():
