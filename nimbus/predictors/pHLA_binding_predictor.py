@@ -152,16 +152,12 @@ class pHLABindingPredictor(L.LightningModule):
         pos_prob = torch.sigmoid(logits[batch_pos_idx]).mean()
         neg_prob = torch.sigmoid(logits[batch_neg_idx]).mean()
         acc = ((logits > 0).long() == labels).float().sum() / len(labels)
-        # Logging
-        self.log(f"{mode}_loss", loss, on_step=True, on_epoch=True,
-                 prog_bar=True)
-        self.log(f"{mode}_acc", acc, on_step=True, on_epoch=True,
-                 prog_bar=True)
-        self.log(f"{mode}_pos_prob", pos_prob, on_step=False, on_epoch=True,
-                 prog_bar=True)
-        self.log(f"{mode}_neg_prob", neg_prob, on_step=False, on_epoch=True,
-                 prog_bar=True)
-
+        # Logging as dict
+        self.log_dict({f"{mode}_loss": loss,
+                       f"{mode}_acc": acc,
+                       f"{mode}_pos_prob": pos_prob,
+                       f"{mode}_neg_prob": neg_prob},
+                      on_step=False, on_epoch=True, prog_bar=True)
         return loss, acc
 
     def configure_optimizers(self):
