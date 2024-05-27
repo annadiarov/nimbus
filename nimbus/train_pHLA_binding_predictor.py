@@ -117,6 +117,12 @@ def parse_args():
                         type=str,
                         default=None,
                         help='Path to a pretrained model')
+    parser.add_argument('--mode',
+                        dest='mode',
+                        type=str,
+                        choices=['train', 'predict'],
+                        default='train',
+                        help='Whether to train the model or predict on a dataset')
     args = parser.parse_args()
     # Generate config dictionary
     config_dict = vars(args)
@@ -154,7 +160,12 @@ def train_predictor(train_loader, val_loader, config):
         model = pHLABindingPredictor.load_from_checkpoint(config['pretrained_filename'])
     else:
         model = pHLABindingPredictor(**config)
+
+    if config['mode'] == 'train':
         trainer.fit(model, train_loader, val_loader)
+    else:
+        #trainer.test(model, val_loader)
+        raise NotImplementedError('Prediction mode is not implemented yet')
 
     model = model.to(DEVICE)
     return model
