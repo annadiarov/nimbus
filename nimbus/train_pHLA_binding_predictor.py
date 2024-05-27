@@ -138,8 +138,8 @@ def train_predictor(train_loader, val_loader, config):
     # saves a file like: my/path/sample-mnist-epoch02-val_loss0.32.ckpt
     checkpoint_callback = ModelCheckpoint(monitor='val_acc',
                                           mode='max',
-                                          filename='epoch{epoch:02d}-val_acc{val_acc:.2f}',
-                                          save_top_k=5,
+                                          filename='epoch{epoch:02d}-val_loss{val_loss:.2f}-val_acc{val_acc:.2f}',
+                                          save_top_k=1,
                                           save_last=True,
                                           auto_insert_metric_name=False)
 
