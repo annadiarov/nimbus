@@ -1,5 +1,6 @@
 import os
 import argparse
+from datetime import datetime
 from pprint import pformat
 import numpy as np
 import pandas as pd
@@ -210,6 +211,8 @@ if __name__ == '__main__':
     config['device'] = DEVICE
     config['seed'] = SEED
     config['n_workers'] = N_WORKERS
+    config['checkpoint_path'] = CHECKPOINT_PATH
+    config['date'] = datetime.today().strftime('%Y-%m-%d')
     # TODO Check if the config_dict is correct
     logger.debug(f'Parsed Configuration:\n{pformat(config)}')
 
