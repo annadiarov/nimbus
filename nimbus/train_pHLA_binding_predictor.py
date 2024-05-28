@@ -91,6 +91,16 @@ def parse_args():
                         dest='hla_fp_dim',
                         type=int, default=80,
                         help='Dimension of HLA fingerprint')
+    parser.add_argument('--pep_seq_len',
+                        dest='pep_seq_len',
+                        type=int,
+                        default=15,
+                        help='Max length of peptide sequence. Shorter sequences are padded')
+    parser.add_argument('--hla_n_fp',
+                        dest='hla_n_fp',
+                        type=int,
+                        default=400,
+                        help='Number of Fingerprints points sampled for each HLA surface')
     parser.add_argument('--n_self_attns',
                         dest='n_self_attns',
                         type=int,
