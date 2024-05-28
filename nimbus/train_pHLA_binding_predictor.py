@@ -143,7 +143,7 @@ def parse_args():
     parser.add_argument('--pretrained_filename',
                         dest='pretrained_filename',
                         type=str,
-                        default=None,
+                        default='',
                         help='Path to a pretrained model')
     args = parser.parse_args()
     # Generate config dictionary
@@ -152,7 +152,7 @@ def parse_args():
 
 
 def load_model(config):
-    if config['pretrained_filename'] is not None and os.path.isfile(config['pretrained_filename']):
+    if config['pretrained_filename'] != '' and os.path.isfile(config['pretrained_filename']):
         logger.info(f"Loading pretrained model {config['pretrained_filename']}")
         model = pHLABindingPredictor.load_from_checkpoint(config['pretrained_filename'], **config)
     else:
@@ -210,6 +210,10 @@ def test_predictor(model, test_loader, config):
         accelerator="auto",
         devices=1,
     )
+    # Try to add hparams in Tensorboard but doesn't work
+    # trainer.logger.experiment.add_hparams(
+    #     hparam_dict=config,
+    #     metric_dict=dict())
     trainer.test(model, test_loader)
 
 
@@ -224,7 +228,7 @@ if __name__ == '__main__':
     # Parse arguments
     config = parse_args()
     # Add some globals to the config # TODO Check if this is necessary
-    config['device'] = DEVICE
+    config['device'] = DEVICE.type
     config['seed'] = SEED
     config['n_workers'] = N_WORKERS
     config['checkpoint_path'] = CHECKPOINT_PATH
@@ -322,10 +326,10 @@ if __name__ == '__main__':
 
     # Test the model
     if config['predict']:
-        if config['pretrained_filename'] is None and config['train']:
+        if config['pretrained_filename'] == '' and config['train']:
             logger.warning('No pretrained model provided. Testing the model '
                            'after training.')
-        elif config['pretrained_filename'] is None and not config['train']:
+        elif config['pretrained_filename'] == '' and not config['train']:
             logger.warning('No pretrained model provided. Testing the model '
                            'without training. This may not be useful unless '
                            'you are debugging.')
