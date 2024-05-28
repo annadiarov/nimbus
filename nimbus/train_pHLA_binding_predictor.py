@@ -55,6 +55,14 @@ def parse_args():
                         default='version',
                         help='Name of the experiment. It will be used to create the loggers')
     # Behavior parameters
+    parser.add_argument('--train',
+                        dest='train',
+                        action='store_true',
+                        help='Whether to train the model')
+    parser.add_argument('--predict',
+                        dest='predict',
+                        action='store_true',
+                        help='Whether to predict on test set')
     parser.add_argument('--balance_train_val',
                         dest='balance_train_val',
                         action='store_true',
@@ -235,67 +243,76 @@ if __name__ == '__main__':
     hla_fp_dict = {hla: torch.Tensor(hla_fp[idx]) for hla, idx in hla_fp_data.items()}
     logger.debug(f'Created hla_fp_dict (which should contain HLA allele as key'
                  f'and the corresponding fingerprint as value): \n{pformat(hla_fp_dict)}')
+
     model = load_model(config)
     logger.info('Model loaded successfully')
 
-    if config['split_train'] or config['val_data_file'] == '':
-        logger.info(f'Splitting training data into training and validation '
-                    f'sets with ratio {config["split_ratio"]}')
-        config['split_train'] = True  # Update the config to reflect the split
-        # use sklearn train_test_split
-        from sklearn.model_selection import train_test_split
-        train_peptide_data, val_peptide_data = train_test_split(
-            train_peptide_data,
-            test_size=1-config['split_ratio'],
-            random_state=SEED,
-            stratify=train_peptide_data['label'],
+    if config['train']:
+        train_peptide_data = pd.read_csv(train_file)
+        logger.debug('Loaded training data successfully')
+
+        if config['split_train'] or config['val_data_file'] == '':
+            logger.info(f'Splitting training data into training and validation '
+                        f'sets with ratio {config["split_ratio"]}')
+            config['split_train'] = True  # Update the config to reflect the split
+            # use sklearn train_test_split
+            from sklearn.model_selection import train_test_split
+            train_peptide_data, val_peptide_data = train_test_split(
+                train_peptide_data,
+                test_size=1-config['split_ratio'],
+                random_state=config['seed'],
+                stratify=train_peptide_data['label'],
+                shuffle=True)
+            logger.info(f'After splitting, training data has shape {train_peptide_data.shape}, '
+                        f'Validation data has shape {val_peptide_data.shape}')
+        else:
+            logger.info(f'Using the provided validation data {config["val_data_file"]}')
+            val_peptide_data = pd.read_csv(val_file)
+
+        if config['balance_train_val']:
+            logger.debug(f'Balancing training and validation data. Current shapes: '
+                         f'{train_peptide_data.shape}, {val_peptide_data.shape}')
+            logger.info('Balancing training data')
+            train_peptide_data = balance_binary_data(train_peptide_data, 'label', seed=config['seed'])
+            val_peptide_data = balance_binary_data(val_peptide_data, 'label', seed=config['seed'])
+            logger.debug(f'Balanced training and validation data. New shapes: '
+                         f'{train_peptide_data.shape}, {val_peptide_data.shape}')
+
+        # Create datasets
+        train_dataset = pHLADataset(peptide_seq_arr=train_peptide_data['peptide'].values,
+                                    hla_names_arr=train_peptide_data['hla_allele'].values,
+                                    hla_fp_dict=hla_fp_dict,
+                                    labels=train_peptide_data['label'].values)
+        logger.debug(f'Sample training data shapes: \n'
+                     f'peptide: {train_dataset[0][0].shape}, \n'
+                     f'hla: {train_dataset[0][1].shape} \n'
+                     f'label: {train_dataset[0][2].shape}')
+        val_dataset = pHLADataset(peptide_seq_arr=val_peptide_data['peptide'].values,
+                                  hla_names_arr=val_peptide_data['hla_allele'].values,
+                                  hla_fp_dict=hla_fp_dict,
+                                  labels=val_peptide_data['label'].values)
+
+        # Create data loaders
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset,
+            batch_size=config['batch_size'],
+            num_workers=N_WORKERS,
             shuffle=True)
-        logger.info(f'After splitting, training data has shape {train_peptide_data.shape}, '
-                    f'Validation data has shape {val_peptide_data.shape}')
-    else:
-        logger.info(f'Using the provided validation data {config["val_data_file"]}')
-        val_peptide_data = pd.read_csv(val_file)
-
-    if config['balance_train_val']:
-        logger.debug(f'Balancing training and validation data. Current shapes: '
-                     f'{train_peptide_data.shape}, {val_peptide_data.shape}')
-        logger.info('Balancing training data')
-        train_peptide_data = balance_binary_data(train_peptide_data, 'label', seed=SEED)
-        val_peptide_data = balance_binary_data(val_peptide_data, 'label', seed=SEED)
-        logger.debug(f'Balanced training and validation data. New shapes: '
-                     f'{train_peptide_data.shape}, {val_peptide_data.shape}')
-    if config['balance_test']:
-        logger.debug(f'Balancing test data. Current shape: {test_peptide_data.shape}')
-        logger.info('Balancing test data')
-        test_peptide_data = balance_binary_data(test_peptide_data, 'label', seed=SEED)
-        logger.debug(f'Balanced validation data. New shape: {test_peptide_data.shape}')
-
-    # Create datasets
-    train_dataset = pHLADataset(peptide_seq_arr=train_peptide_data['peptide'].values,
-                                hla_names_arr=train_peptide_data['hla_allele'].values,
-                                hla_fp_dict=hla_fp_dict,
-                                labels=train_peptide_data['label'].values)
-    logger.debug(f'Sample training data shapes: \n'
-                 f'peptide: {train_dataset[0][0].shape}, \n'
-                 f'hla: {train_dataset[0][1].shape} \n'
-                 f'label: {train_dataset[0][2].shape}')
-    val_dataset = pHLADataset(peptide_seq_arr=val_peptide_data['peptide'].values,
-                              hla_names_arr=val_peptide_data['hla_allele'].values,
-                              hla_fp_dict=hla_fp_dict,
-                              labels=val_peptide_data['label'].values)
-
-    # Create data loaders
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset,
-        batch_size=config['batch_size'],
-        num_workers=N_WORKERS,
-        shuffle=True)
-    val_loader = torch.utils.data.DataLoader(
-        val_dataset,
-        batch_size=config['batch_size'],
-        num_workers=N_WORKERS,
-        shuffle=False)
+        val_loader = torch.utils.data.DataLoader(
+            val_dataset,
+            batch_size=config['batch_size'],
+            num_workers=N_WORKERS,
+            shuffle=False)
 
     model = train_predictor(train_loader,
                             val_loader,
                             config)
+
+        model = train_predictor(model,
+                                train_loader,
+                                val_loader,
+                                config)
+        logger.info('Training completed successfully')
+
+    logger.info('Skipping training. If you want to train the model, use '
+                   'the flag `--train` to enable training.')
