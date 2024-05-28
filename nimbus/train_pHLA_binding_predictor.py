@@ -48,6 +48,11 @@ def parse_args():
                         type=str,
                         default='hla_fingerprints/hla_index_netMHCpan_pseudoseq_res_representation.csv',
                         help='File with HLA allele names and their corresponding indices in `hla_fp_file`')
+    parser.add_argument('--exp_name',
+                        dest='exp_name',
+                        type=str,
+                        default='version',
+                        help='Name of the experiment. It will be used to create the loggers')
     # Behavior parameters
     parser.add_argument('--balance_train_val',
                         dest='balance_train_val',
@@ -160,8 +165,10 @@ def train_predictor(train_loader, val_loader, config):
     trainer = L.Trainer(
         default_root_dir=root_dir,
         # Log in different directories so version_X coincide between loggers
-        logger=[CSVLogger(os.path.join(root_dir, 'csv_logger')),
-                TensorBoardLogger(os.path.join(root_dir, 'tensorboard_logger'))],
+        logger=[CSVLogger(os.path.join(root_dir, 'csv_logger'),
+                          name=config['exp_name']),
+                TensorBoardLogger(os.path.join(root_dir, 'tensorboard_logger'),
+                                  name=config['exp_name'])],
         callbacks=[EarlyStopping(patience=20, monitor='train_loss'), checkpoint_callback],
         accelerator="auto",
         devices=1,
