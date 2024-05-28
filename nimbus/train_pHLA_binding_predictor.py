@@ -149,7 +149,16 @@ def parse_args():
     return config_dict
 
 
-def train_predictor(train_loader, val_loader, config):
+def load_model(config):
+    if config['pretrained_filename'] is not None and os.path.isfile(config['pretrained_filename']):
+        logger.info(f"Loading pretrained model {config['pretrained_filename']}")
+        model = pHLABindingPredictor.load_from_checkpoint(config['pretrained_filename'], **config)
+    else:
+        model = pHLABindingPredictor(**config)
+    return model
+
+
+def train_predictor(model, train_loader, val_loader, config):
     # Create a PyTorch Lightning trainer with the generation callback
     root_dir = CHECKPOINT_PATH
     os.makedirs(root_dir, exist_ok=True)
@@ -180,18 +189,7 @@ def train_predictor(train_loader, val_loader, config):
     )
     trainer.logger._default_hp_metric = None  # Optional logging argument that we don't need
 
-    # Check whether pretrained model exists. If yes, load it
-    if config['pretrained_filename'] is not None and os.path.isfile(config['pretrained_filename']):
-        logger.info(f"Loading pretrained model {config['pretrained_filename']}")
-        model = pHLABindingPredictor.load_from_checkpoint(config['pretrained_filename'], **config)
-    else:
-        model = pHLABindingPredictor(**config)
-
-    if config['mode'] == 'train':
-        trainer.fit(model, train_loader, val_loader)
-    else:
-        #trainer.test(model, val_loader)
-        raise NotImplementedError('Prediction mode is not implemented yet')
+    trainer.fit(model, train_loader, val_loader)
 
     model = model.to(DEVICE)
     return model
@@ -237,6 +235,8 @@ if __name__ == '__main__':
     hla_fp_dict = {hla: torch.Tensor(hla_fp[idx]) for hla, idx in hla_fp_data.items()}
     logger.debug(f'Created hla_fp_dict (which should contain HLA allele as key'
                  f'and the corresponding fingerprint as value): \n{pformat(hla_fp_dict)}')
+    model = load_model(config)
+    logger.info('Model loaded successfully')
 
     if config['split_train'] or config['val_data_file'] == '':
         logger.info(f'Splitting training data into training and validation '
