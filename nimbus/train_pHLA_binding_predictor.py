@@ -145,12 +145,6 @@ def parse_args():
                         type=str,
                         default=None,
                         help='Path to a pretrained model')
-    parser.add_argument('--mode',
-                        dest='mode',
-                        type=str,
-                        choices=['train', 'predict'],
-                        default='train',
-                        help='Whether to train the model or predict on a dataset')
     args = parser.parse_args()
     # Generate config dictionary
     config_dict = vars(args)
@@ -304,10 +298,6 @@ if __name__ == '__main__':
             num_workers=N_WORKERS,
             shuffle=False)
 
-    model = train_predictor(train_loader,
-                            val_loader,
-                            config)
-
         model = train_predictor(model,
                                 train_loader,
                                 val_loader,
@@ -316,3 +306,29 @@ if __name__ == '__main__':
 
     logger.info('Skipping training. If you want to train the model, use '
                    'the flag `--train` to enable training.')
+
+    # Test the model
+    if config['predict']:
+        test_peptide_data = pd.read_csv(test_file)
+        logger.debug('Loaded test data successfully')
+        if config['balance_test']:
+            logger.debug(f'Balancing test data. Current shape: {test_peptide_data.shape}')
+            logger.info('Balancing test data')
+            test_peptide_data = balance_binary_data(test_peptide_data, 'label', seed=config['seed'])
+            logger.debug(f'Balanced validation data. New shape: {test_peptide_data.shape}')
+
+        test_dataset = pHLADataset(
+            peptide_seq_arr=test_peptide_data['peptide'].values,
+            hla_names_arr=test_peptide_data['hla_allele'].values,
+            hla_fp_dict=hla_fp_dict,
+            labels=test_peptide_data['label'].values
+        )
+        test_loader = torch.utils.data.DataLoader(
+            test_dataset,
+            batch_size=config['batch_size'],
+            num_workers=N_WORKERS,
+            shuffle=False
+        )
+        test_predictor(model, test_loader, config)
+        logger.info('Testing completed successfully')
+    
