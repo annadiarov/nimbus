@@ -322,6 +322,13 @@ if __name__ == '__main__':
 
     # Test the model
     if config['predict']:
+        if config['pretrained_filename'] is None and config['train']:
+            logger.warning('No pretrained model provided. Testing the model '
+                           'after training.')
+        elif config['pretrained_filename'] is None and not config['train']:
+            logger.warning('No pretrained model provided. Testing the model '
+                           'without training. This may not be useful unless '
+                           'you are debugging.')
         test_peptide_data = pd.read_csv(test_file)
         logger.debug('Loaded test data successfully')
         if config['balance_test']:
