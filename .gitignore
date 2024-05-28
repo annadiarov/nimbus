@@ -238,3 +238,5 @@ data/raw/pHLA_stability/Stability.data
 data/raw/pHLA_binding/NetMHCpan_train/
 data/raw/pHLA_binding/CD8_mapped
 data/raw/pHLA_binding/CD8_benchmark_filtered
+
+checkpoints/
