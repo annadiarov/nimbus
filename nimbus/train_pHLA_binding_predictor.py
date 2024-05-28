@@ -162,7 +162,7 @@ def load_model(config):
 
 def train_predictor(model, train_loader, val_loader, config):
     # Create a PyTorch Lightning trainer with the generation callback
-    root_dir = CHECKPOINT_PATH
+    root_dir = config['checkpoint_path']
     os.makedirs(root_dir, exist_ok=True)
     # save epoch and val_loss in name, but specify the formatting yourself (e.g. to avoid problems with Tensorboard
     # or Neptune, due to the presence of characters like '=' or '/')
@@ -193,7 +193,9 @@ def train_predictor(model, train_loader, val_loader, config):
 
     trainer.fit(model, train_loader, val_loader)
 
+    # TODO Output the best model from training
     model = model.to(DEVICE)
+
     return model
 
 
@@ -230,16 +232,13 @@ if __name__ == '__main__':
     # TODO Check if the config_dict is correct
     logger.debug(f'Parsed Configuration:\n{pformat(config)}')
 
-    # Load data
+    # Get filenames
     train_file = os.path.join(config['data_dir'], config['train_data_file'])
     val_file = os.path.join(config['data_dir'], config['val_data_file'])
     test_file = os.path.join(config['data_dir'], config['test_data_file'])
     hla_fp_file = os.path.join(config['data_dir'], config['hla_fp_file'])
     hla_fp_data_file = os.path.join(config['data_dir'], config['hla_fp_data_file'])
-    train_peptide_data = pd.read_csv(train_file)
-    logger.debug('Loaded training data successfully')
-    test_peptide_data = pd.read_csv(test_file)
-    logger.debug('Loaded test data successfully')
+
     # Load df with HLA names as index to get the index of the HLA in the hla_fp
     hla_fp_data = pd.read_csv(hla_fp_data_file,
                               index_col=1,
