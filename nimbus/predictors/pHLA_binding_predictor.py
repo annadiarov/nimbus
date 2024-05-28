@@ -1,12 +1,19 @@
+import io
 import torch
 import torch.nn as nn
 import lightning as L
 import torch.optim as optim
 import torch.nn.functional as F
+from torchmetrics.classification import BinaryAUROC
+from sklearn.metrics import roc_curve, auc
 from einops.layers.torch import Rearrange, Reduce
+import matplotlib.pyplot as plt
+from PIL import Image
+import numpy as np
 from nimbus.utils import CosineWarmupScheduler
 from nimbus.ml_blocks import SelfAttentionBlock, JointCrossAttentionBlock, FILIPBlock
 from nimbus.globals import DEVICE
+
 
 
 class pHLABindingPredictor(L.LightningModule):
@@ -59,7 +66,9 @@ class pHLABindingPredictor(L.LightningModule):
         super().__init__()
         self.save_hyperparameters()
         self._create_model()
-        # self.logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
+        # Used in testing mode
+        self._auroc = BinaryAUROC()
+        self._test_outputs = []  # Initialize a list to store test outputs
 
     def _create_model(self):
         # Dynamic (learnable) positional encodings
@@ -149,8 +158,9 @@ class pHLABindingPredictor(L.LightningModule):
         target = labels.float()
 
         loss = F.binary_cross_entropy_with_logits(logits, target)
-        pos_prob = torch.sigmoid(logits[batch_pos_idx]).mean()
-        neg_prob = torch.sigmoid(logits[batch_neg_idx]).mean()
+        probs = torch.sigmoid(logits)
+        pos_prob = probs[batch_pos_idx].mean()
+        neg_prob = probs[batch_neg_idx].mean()
         acc = ((logits > 0).long() == labels).float().sum() / len(labels)
         # Logging as dict
         self.log_dict({f"{mode}_loss": loss,
@@ -158,7 +168,7 @@ class pHLABindingPredictor(L.LightningModule):
                        f"{mode}_pos_prob": pos_prob,
                        f"{mode}_neg_prob": neg_prob},
                       on_step=False, on_epoch=True, prog_bar=True)
-        return loss, acc
+        return loss, acc, probs
 
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=self.hparams.lr)
@@ -176,8 +186,57 @@ class pHLABindingPredictor(L.LightningModule):
         self.lr_scheduler.step()  # Step per iteration
 
     def training_step(self, batch, batch_idx):
-        loss, _ = self._calculate_loss(batch, mode="train")
+        loss, _, _ = self._calculate_loss(batch, mode="train")
         return loss
 
     def validation_step(self, batch, batch_idx):
         _ = self._calculate_loss(batch, mode="val")
+
+    def test_step(self, batch, batch_idx):
+        _, _, probs = self._calculate_loss(batch, mode="test")
+        _, _, labels = batch
+        self._test_outputs.append({'probs': probs, 'labels': labels})
+        return {'probs': probs, 'labels': labels}
+
+    def on_test_epoch_end(self):
+        # Concatenate all probabilities and labels from outputs
+        all_probs = torch.cat([x['probs'] for x in self._test_outputs])
+        all_labels = torch.cat([x['labels'] for x in self._test_outputs]).int()
+
+        # Compute ROC-AUC score
+        roc_auc_score = self._auroc(all_probs, all_labels)
+        self.log('test_roc_auc', roc_auc_score)
+
+        # Compute ROC curve
+        fpr, tpr, _ = roc_curve(all_labels.cpu(), all_probs.cpu())
+        roc_auc = auc(fpr, tpr)
+
+        # Plot ROC curve
+        plt.figure()
+        plt.plot(fpr, tpr, color='darkorange', lw=2,
+                 label=f'ROC curve (area = {roc_auc:0.2f})')
+        plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Receiver Operating Characteristic')
+        plt.legend(loc="lower right")
+
+        # Save figure to a temporary buffer
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+
+        # Convert buffer to PIL Image and then to numpy array
+        img = Image.open(buf)
+        img_array = np.array(img)
+
+        # Log ROC curve figure to TensorBoard
+        self.logger.experiment.add_image('ROC Curve', img_array, global_step=self.global_step, dataformats='HWC')
+
+        # Reset the metric for the next epoch
+        self._auroc.reset()
+
+        # Clear the list for the next epoch
+        self._test_outputs.clear()
