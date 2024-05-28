@@ -197,6 +197,20 @@ def train_predictor(model, train_loader, val_loader, config):
     return model
 
 
+def test_predictor(model, test_loader, config):
+    root_dir = config['checkpoint_path']
+    if not config['exp_name'].startswith('test'):
+        config['exp_name'] = f"test_{config['exp_name']}"
+    trainer = L.Trainer(
+        default_root_dir=root_dir,
+        logger=[TensorBoardLogger(os.path.join(root_dir, 'tensorboard_logger'),
+                                  name=config['exp_name'])],
+        accelerator="auto",
+        devices=1,
+    )
+    trainer.test(model, test_loader)
+
+
 if __name__ == '__main__':
     # Setting the seed
     L.seed_everything(SEED)
