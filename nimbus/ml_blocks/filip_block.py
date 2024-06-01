@@ -49,7 +49,8 @@ class FILIPBlock(nn.Module):
             self,
             x,
             context,
-            context_mask=None
+            context_mask=None,
+            save_raw_interactions=False
     ):
         b, heads, device = x.shape[0], self.heads, x.device
 
@@ -102,7 +103,14 @@ class FILIPBlock(nn.Module):
         # differentiable max, as in FILIP paper
 
         interactions = einsum(einsum_eq, x, context)  # B, H, X, C+1
+
+        if save_raw_interactions:
+            raw_context_relevant_interactions = interactions.copy_(interactions)
+
         interactions = logavgexp(interactions, mask=context_mask, dim=-1,
                                  temp=0.05)  # B, H, X where X is input dim
         interactions = rearrange(interactions, 'b h i -> b i h')
-        return interactions
+        if save_raw_interactions:
+            return interactions, raw_context_relevant_interactions
+        else:
+            return interactions
