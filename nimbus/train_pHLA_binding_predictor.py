@@ -343,12 +343,12 @@ if __name__ == '__main__':
         train_loader = torch.utils.data.DataLoader(
             train_dataset,
             batch_size=config['batch_size'],
-            num_workers=N_WORKERS,
+            num_workers=config['n_workers'] ,
             shuffle=True)
         val_loader = torch.utils.data.DataLoader(
             val_dataset,
             batch_size=config['batch_size'],
-            num_workers=N_WORKERS,
+            num_workers=config['n_workers'] ,
             shuffle=False)
 
         model = train_predictor(model,
@@ -386,7 +386,7 @@ if __name__ == '__main__':
         test_loader = torch.utils.data.DataLoader(
             test_dataset,
             batch_size=config['batch_size'],
-            num_workers=N_WORKERS,
+            num_workers=config['n_workers'] ,
             shuffle=False
         )
         test_predictor(model, test_loader, config)
