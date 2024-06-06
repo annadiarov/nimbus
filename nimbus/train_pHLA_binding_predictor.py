@@ -63,6 +63,16 @@ def parse_args():
                         dest='predict',
                         action='store_true',
                         help='Whether to predict on test set')
+    parser.add_argument('--use_train_data_file_splits',
+                        dest='use_train_data_file_splits',
+                        type=str,
+                        default='',
+                        help='If not empty, it uses the splits in train_data_file'
+                             'under column `split`. The expected string should '
+                             'have the format split_train1,split_train2:split_val1.'
+                             'Eg: if we have 5 splits numbered from 0 to 4, one '
+                             'could set 0,1,2,3:4 to use splits 0,1,2,3 to train '
+                             'and 4 to validate.')
     parser.add_argument('--balance_train_val',
                         dest='balance_train_val',
                         action='store_true',
@@ -271,8 +281,24 @@ if __name__ == '__main__':
     if config['train']:
         train_peptide_data = pd.read_csv(train_file)
         logger.debug('Loaded training data successfully')
+        if config['use_train_data_file_splits'] != '':
+            logger.info(f'Using the splits in the training data file {train_file}')
+            splits = config['use_train_data_file_splits'].split(':')
+            train_splits = [str(x) for x in splits[0].split(',')]
+            val_splits = [str(x) for x in splits[1].split(',')]
+            # Check if train and val splits are overlapping
+            if len(set(train_splits).intersection(set(val_splits))) > 0:
+                logger.warning('Train and validation splits are overlapping. '
+                               'This may lead to data leakage. Please check the'
+                               ' splits.')
+            # Ensure that the split column is a string
+            train_peptide_data['split'] = train_peptide_data.split.astype(str)
+            train_peptide_data = train_peptide_data[train_peptide_data['split'].isin(train_splits)]
+            val_peptide_data = train_peptide_data[train_peptide_data['split'].isin(val_splits)]
+            logger.info(f'After splitting, training data has shape {train_peptide_data.shape}, '
+                        f'Validation data has shape {val_peptide_data.shape}')
 
-        if config['split_train'] or config['val_data_file'] == '':
+        elif config['split_train'] or config['val_data_file'] == '':
             logger.info(f'Splitting training data into training and validation '
                         f'sets with ratio {config["split_ratio"]}')
             config['split_train'] = True  # Update the config to reflect the split
