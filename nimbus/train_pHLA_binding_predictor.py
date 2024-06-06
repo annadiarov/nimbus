@@ -293,8 +293,11 @@ if __name__ == '__main__':
                                ' splits.')
             # Ensure that the split column is a string
             train_peptide_data['split'] = train_peptide_data.split.astype(str)
-            train_peptide_data = train_peptide_data[train_peptide_data['split'].isin(train_splits)]
             val_peptide_data = train_peptide_data[train_peptide_data['split'].isin(val_splits)]
+            train_peptide_data = train_peptide_data[train_peptide_data['split'].isin(train_splits)]
+            # Assert not empty datasets
+            assert train_peptide_data.shape[0] != 0, "There's no train data"
+            assert val_peptide_data.shape[0] != 0, "There's no validation data"
             logger.info(f'After splitting, training data has shape {train_peptide_data.shape}, '
                         f'Validation data has shape {val_peptide_data.shape}')
 
