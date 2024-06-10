@@ -1,1 +1,2 @@
 from .pHLA_binding_predictor import pHLABindingPredictor
+from .pHLA_pseudoseq_binding_predictor import pHLAPseudoseqBindingPredictor
