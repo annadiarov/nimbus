@@ -2,7 +2,6 @@ import os
 import argparse
 from datetime import datetime
 from pprint import pformat
-import numpy as np
 import pandas as pd
 import torch
 import lightning as L
@@ -39,16 +38,11 @@ def parse_args():
                         type=str,
                         default='pHLA_binding/NetMHCpan_dataset/test_set_peptides_data_MaxLenPep15_hla_ABC.csv.gz',
                         help='File containing test data. Relative file path to data_dir.')
-    parser.add_argument('--hla_fp_file',
-                        dest='hla_fp_file',
-                        type=str,
-                        default='hla_fingerprints/hla_af_patch_emb_netMHCpan_radius_18_pt_400.npy',
-                        help='File containing HLA pseudosequences')
     parser.add_argument('--hla_fp_data_file',
                         dest='hla_fp_data_file',
                         type=str,
-                        default='../raw/pHLA_binding/NetMHCpan_train/MHC_pseudo.dat',
-                        help='File with HLA allele names and their corresponding indices in `hla_fp_file`')
+                        default='../raw/pHLA_binding/NetMHCpan_train/MHC_pseudo_fixed.dat',
+                        help='File containing HLA pseudosequences and its HLA allele.')
     parser.add_argument('--exp_name',
                         dest='exp_name',
                         type=str,
@@ -260,21 +254,14 @@ if __name__ == '__main__':
     train_file = os.path.join(config['data_dir'], config['train_data_file'])
     val_file = os.path.join(config['data_dir'], config['val_data_file'])
     test_file = os.path.join(config['data_dir'], config['test_data_file'])
-    hla_fp_file = os.path.join(config['data_dir'], config['hla_fp_file'])
     hla_fp_data_file = os.path.join(config['data_dir'], config['hla_fp_data_file'])
 
-    # Load df with HLA names as index to get the index of the HLA in the hla_fp
-    hla_fp_data = pd.read_csv(hla_fp_data_file,
-                              index_col=1,
-                              names=['index'],
-                              header=0).to_dict()['index']
-    logger.debug('Loaded HLA data file successfully')
-    hla_fp = pd.read_csv(hla_fp_file,
-                         sep='\s+',
-                         names=['pseudoseq'],
-                         header=None).to_dict()['pseudoseq']
     # Dict of HLA alleles and their fingerprints
-    hla_fp_dict = {hla: torch.Tensor(hla_fp[idx]) for hla, idx in hla_fp_data.items()}
+    hla_fp_dict = pd.read_csv(
+        hla_fp_data_file,
+        sep='\s+',
+        names=['pseudoseq'],
+        header=None).to_dict()['pseudoseq']
     logger.debug(f'Created hla_fp_dict (which should contain HLA allele as key'
                  f'and the corresponding fingerprint as value): \n{pformat(hla_fp_dict)}')
 
