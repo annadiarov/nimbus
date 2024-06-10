@@ -214,7 +214,7 @@ def train_predictor(model, train_loader, val_loader, config):
     trainer.fit(model, train_loader, val_loader)
 
     # TODO Output the best model from training
-    model = model.to(DEVICE)
+    # model = model.to(config['device']) # Not necessary as the model is already on the device
 
     return model
 
