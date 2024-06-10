@@ -2,11 +2,8 @@
 Code for Cross-Attention Block extracted from the following repository:
     https://github.com/lucidrains/tf-bind-transformer
 """
-import torch
 import torch.nn as nn
-from torch import einsum
-from einops import rearrange
-from nimbus.utils import default, exists
+from nimbus.utils import default
 from nimbus.ml_blocks import FeedForwardBlock, BidirectionalCrossAttentionBlock
 
 
@@ -38,10 +35,28 @@ class JointCrossAttentionBlock(nn.Module):
             x,
             context,
             mask=None,
-            context_mask=None
+            context_mask=None,
+            return_attn=False,
     ):
-        attn_out, context_attn_out = self.attn(x, context, mask=mask,
-                                               context_mask=context_mask)
+        if return_attn:
+            # *_out have the same shape as x and context
+            # attn and context_attn have the shape of (b, heads, n, m) and
+            # (b, heads, m, n) respectively, where n is the sequence length of x
+            # and m is the sequence length of context
+            attn_out, context_attn_out, attn, context_attn = self.attn(
+                x,
+                context,
+                mask=mask,
+                context_mask=context_mask,
+                return_attn=True
+            )
+        else:
+            attn_out, context_attn_out = self.attn(
+                x,
+                context,
+                mask=mask,
+                context_mask=context_mask
+            )
 
         x = x + attn_out
         context = context + context_attn_out
@@ -49,4 +64,7 @@ class JointCrossAttentionBlock(nn.Module):
         x = self.ff(x) + x
         context = self.context_ff(context) + context
 
-        return x, context
+        if return_attn:
+            return x, context, attn, context_attn
+        else:
+            return x, context

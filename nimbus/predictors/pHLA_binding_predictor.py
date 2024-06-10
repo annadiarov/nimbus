@@ -72,10 +72,12 @@ class pHLABindingPredictor(L.LightningModule):
 
     def _create_model(self):
         # Dynamic (learnable) positional encodings
-        self.h_pe = nn.Parameter(torch.empty(self.hparams.hla_n_fp,
-                                             self.hparams.hla_fp_dim))
-        self.p_pe = nn.Parameter(torch.empty(self.hparams.pep_seq_len,
-                                             self.hparams.pep_embedding_dim))
+        self.h_pe = nn.Parameter(
+            torch.empty(self.hparams.hla_n_fp, self.hparams.hla_fp_dim)
+        )
+        self.p_pe = nn.Parameter(
+            torch.empty(self.hparams.pep_seq_len, self.hparams.pep_embedding_dim)
+        )
 
         # Peptide sequence embedding: N,15,1 -> N,15,32
         self.p_embedding = nn.Embedding(21,  # 20 amino acids + 1 padding
@@ -95,10 +97,13 @@ class pHLABindingPredictor(L.LightningModule):
               for _ in range(self.hparams.n_self_attns)])
 
         self.joint_cross_attns = nn.Sequential(
-            *[JointCrossAttentionBlock(dim=self.hparams.hla_fp_dim,
-                                       context_dim=self.hparams.pep_embedding_dim,
-                                       dropout=self.hparams.dropout)
-              for _ in range(self.hparams.n_joint_cross_attns)])
+            *[JointCrossAttentionBlock(
+                dim=self.hparams.hla_fp_dim,
+                context_dim=self.hparams.pep_embedding_dim,
+                dropout=self.hparams.dropout
+             ) for _ in range(self.hparams.n_joint_cross_attns)
+            ]
+        )
 
         self.filip = FILIPBlock(
             dim=self.hparams.hla_fp_dim,
@@ -108,8 +113,10 @@ class pHLABindingPredictor(L.LightningModule):
             dropout=self.hparams.dropout
         )
 
-        self.linear_to_logits = nn.Linear(self.hparams.filip_num_heads,
-                                          self.hparams.filip_num_heads)
+        self.linear_to_logits = nn.Linear(
+            self.hparams.filip_num_heads,
+            self.hparams.filip_num_heads
+        )
 
         self.to_pred = nn.Sequential(
             Reduce('... n d -> ... d', 'mean'),
@@ -125,25 +132,66 @@ class pHLABindingPredictor(L.LightningModule):
         nn.init.normal_(self.p_pe, std=0.01)
         nn.init.normal_(self.h_pe, std=0.01)
 
-    def forward(self, p, h):
-        #h = h.reshape(-1, self.hparams.hla_n_fp, self.hparams.hla_fp_dim)
+    def forward(self, p, h, save_attn=False):
+        if save_attn:
+            pep_self_attn, hla_self_attn = [], []
+            pep_cross_attn, hla_cross_attn = [], []
         h = h + self.h_pe
         h = self.h_ln(h)
-        for h_self_attns in self.h_self_attns: h = h_self_attns(h)
+        for h_self_attns in self.h_self_attns:
+            h = h_self_attns(h)
+            if save_attn:
+                hla_self_attn.append(h.detach().cpu().numpy())
         p = p.squeeze().int()
         p = self.p_embedding(p)
         p = p + self.p_pe
         p = self.p_ln(p)
-        for p_self_attns in self.p_self_attns: p = p_self_attns(p)
+        for p_self_attns in self.p_self_attns:
+            p = p_self_attns(p)
+            if save_attn:
+                pep_self_attn.append(p.detach().cpu().numpy())
 
         h_mask = torch.ones((1, self.hparams.hla_n_fp)).bool().to(DEVICE)
         p_mask = torch.ones((1, self.hparams.pep_seq_len)).bool().to(DEVICE)
 
-        for cross_attn in self.joint_cross_attns:
-            h, p = cross_attn(h, context=p, mask=h_mask, context_mask=p_mask)
+        if save_attn:
+            for cross_attn in self.joint_cross_attns:
+                h, p, h_attn, p_attn = cross_attn(
+                    h,
+                    context=p,
+                    mask=h_mask,
+                    context_mask=p_mask,
+                    return_attn=save_attn
+                )
+                hla_cross_attn.append(h_attn.detach().cpu().numpy())
+                pep_cross_attn.append(p_attn.detach().cpu().numpy())
 
-        x = self.filip(h, p, context_mask=p_mask)
+        else:
+            for cross_attn in self.joint_cross_attns:
+                h, p = cross_attn(
+                    h,
+                    context=p,
+                    mask=h_mask,
+                    context_mask=p_mask
+                )
 
+        if save_attn:
+            x, filip_interactions = (
+                self.filip(h, p, context_mask=p_mask,
+                           save_raw_interactions=save_attn))
+            filip_interactions = filip_interactions.detach().cpu().numpy()
+        else:
+            x = self.filip(h, p, context_mask=p_mask, save_raw_interactions=save_attn)
+
+        if save_attn:
+            attns_dict = {
+                'pep_self_attn': pep_self_attn,
+                'hla_self_attn': hla_self_attn,
+                'pep_cross_attn': pep_cross_attn,
+                'hla_cross_attn': hla_cross_attn,
+                'filip_interactions': filip_interactions,
+            }
+            return x, attns_dict
         return x
 
     def _calculate_loss(self, batch, mode="train"):

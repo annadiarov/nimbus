@@ -49,17 +49,19 @@ class FILIPBlock(nn.Module):
             self,
             x,
             context,
-            context_mask=None
+            context_mask=None,
+            save_raw_interactions=False
     ):
         b, heads, device = x.shape[0], self.heads, x.device
 
+        # n: sequence length or n_hla_fp, d: sequence emb dim
         x = einsum('b n d, d e -> b n e', x, self.to_latent_w)
         x = x + self.to_latent_b
 
+        # h: n_head, d: dim_head
         x = rearrange(x, 'b n (h d) -> b h n d', h=heads)
 
-        context = einsum('b n d, d e -> b n e', context,
-                         self.context_to_latent_w)
+        context = einsum('b n d, d e -> b n e', context, self.context_to_latent_w)
         context = context + self.context_to_latent_b
 
         context = rearrange(context, 'b n (h d) -> b h n d', h=heads)
@@ -89,7 +91,8 @@ class FILIPBlock(nn.Module):
             keep_mask = prob_mask_like(context_mask, 1 - self.pre_attn_dropout)
             context_mask = context_mask & keep_mask
 
-        # add null context and modify mask
+        # add null context and modify mask (provides a learnable representation
+        #  for the case where no relevant context is available.
 
         context_mask = F.pad(context_mask, (1, 0), value=True)
         context_mask = rearrange(context_mask, 'b j -> b 1 1 j')
@@ -99,8 +102,15 @@ class FILIPBlock(nn.Module):
 
         # differentiable max, as in FILIP paper
 
-        interactions = einsum(einsum_eq, x, context)
+        interactions = einsum(einsum_eq, x, context)  # B, H, X, C+1
+
+        if save_raw_interactions:
+            raw_context_relevant_interactions = interactions.copy_(interactions)
+
         interactions = logavgexp(interactions, mask=context_mask, dim=-1,
-                                 temp=0.05)
+                                 temp=0.05)  # B, H, X where X is input dim
         interactions = rearrange(interactions, 'b h i -> b i h')
-        return interactions
+        if save_raw_interactions:
+            return interactions, raw_context_relevant_interactions
+        else:
+            return interactions
