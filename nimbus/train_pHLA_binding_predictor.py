@@ -42,12 +42,12 @@ def parse_args():
     parser.add_argument('--hla_fp_file',
                         dest='hla_fp_file',
                         type=str,
-                        default='hla_fingerprints/hla_af_patch_emb_netMHCpan_radius_18_pt_400.npy',
+                        default='hla_fingerprints/hla_af_patch_emb_patch_r18_pt400.npy',
                         help='File containing HLA fingerprints')
     parser.add_argument('--hla_fp_data_file',
                         dest='hla_fp_data_file',
                         type=str,
-                        default='hla_fingerprints/hla_index_netMHCpan_pseudoseq_res_representation.csv',
+                        default='hla_fingerprints/hla_af_patch_info_patch_r18_pt400.csv',
                         help='File with HLA allele names and their corresponding indices in `hla_fp_file`')
     parser.add_argument('--exp_name',
                         dest='exp_name',
