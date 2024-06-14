@@ -134,22 +134,31 @@ class pHLABindingPredictor(L.LightningModule):
 
     def forward(self, p, h, save_attn=False):
         if save_attn:
-            pep_self_attn, hla_self_attn = [], []
-            pep_cross_attn, hla_cross_attn = [], []
+            pep_self_attn_matrices, hla_self_attn_matrices = [], []
+            pep_cross_attn_matrices, hla_cross_attn_matrices = [], []
+
         h = h + self.h_pe
         h = self.h_ln(h)
-        for h_self_attns in self.h_self_attns:
-            h = h_self_attns(h)
-            if save_attn:
-                hla_self_attn.append(h.detach().cpu().numpy())
+
+        if save_attn:
+            for h_self_attn in self.h_self_attns:
+                h, h_self_attn_mat = h_self_attn(h, return_attn=save_attn)
+                hla_self_attn_matrices.append(h_self_attn_mat.detach().cpu().numpy())
+        else:
+            for h_self_attns in self.h_self_attns:
+                h = h_self_attns(h)
+
         p = p.squeeze().int()
         p = self.p_embedding(p)
         p = p + self.p_pe
         p = self.p_ln(p)
-        for p_self_attns in self.p_self_attns:
-            p = p_self_attns(p)
-            if save_attn:
-                pep_self_attn.append(p.detach().cpu().numpy())
+        if save_attn:
+            for p_self_attn in self.p_self_attns:
+                p, p_self_attn_mat = p_self_attn(p, return_attn=save_attn)
+                pep_self_attn_matrices.append(p_self_attn_mat.detach().cpu().numpy())
+        else:
+            for p_self_attns in self.p_self_attns:
+                p = p_self_attns(p)
 
         h_mask = torch.ones((1, self.hparams.hla_n_fp)).bool().to(DEVICE)
         p_mask = torch.ones((1, self.hparams.pep_seq_len)).bool().to(DEVICE)
@@ -163,8 +172,8 @@ class pHLABindingPredictor(L.LightningModule):
                     context_mask=p_mask,
                     return_attn=save_attn
                 )
-                hla_cross_attn.append(h_attn.detach().cpu().numpy())
-                pep_cross_attn.append(p_attn.detach().cpu().numpy())
+                hla_cross_attn_matrices.append(h_attn.detach().cpu().numpy())
+                pep_cross_attn_matrices.append(p_attn.detach().cpu().numpy())
 
         else:
             for cross_attn in self.joint_cross_attns:
@@ -185,10 +194,10 @@ class pHLABindingPredictor(L.LightningModule):
 
         if save_attn:
             attns_dict = {
-                'pep_self_attn': pep_self_attn,
-                'hla_self_attn': hla_self_attn,
-                'pep_cross_attn': pep_cross_attn,
-                'hla_cross_attn': hla_cross_attn,
+                'pep_self_attn': pep_self_attn_matrices,
+                'hla_self_attn': hla_self_attn_matrices,
+                'pep_cross_attn': pep_cross_attn_matrices,
+                'hla_cross_attn': hla_cross_attn_matrices,
                 'filip_interactions': filip_interactions,
             }
             return x, attns_dict
