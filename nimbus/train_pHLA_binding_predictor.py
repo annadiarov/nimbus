@@ -49,7 +49,7 @@ def parse_args():
                         type=str,
                         default='hla_fingerprints/hla_af_patch_info_patch_r18_pt400.csv',
                         help='File with HLA allele names and their corresponding indices in `hla_fp_file`')
-    parser.add_argument('--use-augmented-hla-data',
+    parser.add_argument('--use_augmented_hla_data',
                         dest='use_augmented_hla_data',
                         action='store_true',
                         help='If set, use the augmented HLA data provided in the flags'
