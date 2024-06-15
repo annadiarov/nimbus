@@ -174,7 +174,7 @@ def parse_args():
 def load_model(config):
     if config['pretrained_filename'] != '' and os.path.isfile(config['pretrained_filename']):
         logger.info(f"Loading pretrained model {config['pretrained_filename']}")
-        model = pHLABindingPredictor.load_from_checkpoint(config['pretrained_filename'], **config)
+        model = pHLABindingPredictor.load_from_checkpoint(config['pretrained_filename'])
     else:
         model = pHLABindingPredictor(**config)
     return model
