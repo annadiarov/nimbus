@@ -337,7 +337,8 @@ Nielsen, M.; Buus, S. Pan-Specific Prediction of Peptide–MHC Class I Complex
 Stability, a Correlate of T Cell Immunogenicity. *J. Immunol.* **2016**, 197, 1517–1524.
 [![DOI:10.4049/jimmunol.1600582](https://zenodo.org/badge/DOI/10.1007/978-3-319-76207-4_15.svg)](https://doi.org/10.4049/jimmunol.1600582)
 
-## T-Cell-pMHC recognition data
+## Immunogenicity data
+### PRIME: TCell-pMHC recognition data
 
 Data from Gfeller et al. (2023) is publicly available at the [supplementary
 information](https://www.nature.com/articles/s41586-021-03819-2#Sec19) associated
@@ -424,7 +425,7 @@ SARS-CoV-2 CD8+ T-Cell Epitopes. _Cell Syst._ **2023**, 14, 72-83.e5.
 
 </details>
 
-## Neoantigen immunogenicity data
+### Neoantigen immunogenicity data
 
 Data from Müller et al. (2023) is publicly available at the publication's [Data availability
 section](https://www.cell.com/immunity/fulltext/S1074-7613(23)00406-5?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS1074761323004065%3Fshowall%3Dtrue#sectitle0030).
