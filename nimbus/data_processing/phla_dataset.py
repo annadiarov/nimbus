@@ -9,7 +9,8 @@ class pHLADataset(torch.utils.data.Dataset):
                  hla_names_arr: np.ndarray,
                  hla_fp_dict: dict,
                  labels: np.ndarray,
-                 max_peptide_len: int = 15):
+                 max_peptide_len: int = 15,
+                 has_augmented_hla: bool = False):
         # Validate inputs
         assert len(peptide_seq_arr) == len(hla_names_arr) == len(labels), \
             'Peptide, HLA and labels must have the same length'
@@ -30,10 +31,26 @@ class pHLADataset(torch.utils.data.Dataset):
              for pep in peptide_seq_arr]
         peptide_idx_list = [torch.Tensor(pep_tokenizer.encode(pep)) for
                             pep in peptide_pad]
-        self.peptides = peptide_idx_list
-        hlas_fp_list = [torch.Tensor(hla_fp_dict[hla]) for hla in hla_names_arr]
-        self.hlas = hlas_fp_list  # In the same order as peptide
-        self.labels = torch.Tensor(labels)  # 1D array of 0s and 1s
+        if has_augmented_hla:
+            # if no augmented data, hla_fp_dict has hla_names as key and fingerprint as torch 2d array in dict values
+            #  If the data is augmented, instead of 2d array, we have a 3d array where the first dim is the number of different fingerprints for that hla_names
+            # If data augmented is provided, then expand the number of peptides (and the label for each pair) by the number of different fingerprints for that allele
+            self.peptides = []
+            self.hlas = []
+            self.labels = []
+            for i, hla in enumerate(hla_names_arr):
+                hla_fp = hla_fp_dict[hla]
+                num_fp = hla_fp.shape[0]  # Number of different fingerprints for this allele
+                for j in range(num_fp):
+                    self.peptides.append(peptide_idx_list[i])
+                    self.hlas.append(torch.Tensor(hla_fp[j]))
+                    self.labels.append(labels[i])
+            self.labels = torch.Tensor(self.labels)
+        else:
+            self.peptides = peptide_idx_list
+            hlas_fp_list = [torch.Tensor(hla_fp_dict[hla]) for hla in hla_names_arr]
+            self.hlas = hlas_fp_list  # In the same order as peptide
+            self.labels = torch.Tensor(labels)  # 1D array of 0s and 1s
 
     def __len__(self):
         return len(self.hlas)

@@ -49,6 +49,11 @@ def parse_args():
                         type=str,
                         default='hla_fingerprints/hla_af_patch_info_patch_r18_pt400.csv',
                         help='File with HLA allele names and their corresponding indices in `hla_fp_file`')
+    parser.add_argument('--use_augmented_hla_data',
+                        dest='use_augmented_hla_data',
+                        action='store_true',
+                        help='If set, use the augmented HLA data provided in the flags'
+                             '`--hla_fp_file` and `--hla_fp_data_file`')
     parser.add_argument('--exp_name',
                         dest='exp_name',
                         type=str,
@@ -174,7 +179,7 @@ def parse_args():
 def load_model(config):
     if config['pretrained_filename'] != '' and os.path.isfile(config['pretrained_filename']):
         logger.info(f"Loading pretrained model {config['pretrained_filename']}")
-        model = pHLABindingPredictor.load_from_checkpoint(config['pretrained_filename'], **config)
+        model = pHLABindingPredictor.load_from_checkpoint(config['pretrained_filename'])
     else:
         model = pHLABindingPredictor(**config)
     return model
@@ -264,11 +269,18 @@ if __name__ == '__main__':
     hla_fp_data_file = os.path.join(config['data_dir'], config['hla_fp_data_file'])
 
     # Load df with HLA names as index to get the index of the HLA in the hla_fp
-    hla_fp_data = pd.read_csv(hla_fp_data_file,
-                              index_col=1,
-                              names=['index'],
-                              header=0).to_dict()['index']
-    logger.debug('Loaded HLA data file successfully')
+    if config['use_augmented_hla_data']:
+        # To process raw data
+        # newd = {f"{'-'.join(k[0].split('-')[:2])}{'-'.join(k[0].split('_')[0].split('-')[-2:])}": d[k] for k in d.keys()}
+        tmp_data = pd.read_pickle(hla_fp_data_file)
+        hla_fp_data = {k: i for i, k in enumerate(tmp_data.keys())}
+    else:
+        hla_fp_data = pd.read_csv(
+            hla_fp_data_file,
+            index_col=1,
+            names=['index'],
+            header=0).to_dict()['index']
+        logger.debug('Loaded HLA data file successfully')
     hla_fp = np.load(hla_fp_file)
     # Dict of HLA alleles and their fingerprints
     hla_fp_dict = {hla: torch.Tensor(hla_fp[idx]) for hla, idx in hla_fp_data.items()}
@@ -312,7 +324,8 @@ if __name__ == '__main__':
                 test_size=1-config['split_ratio'],
                 random_state=config['seed'],
                 stratify=train_peptide_data['label'],
-                shuffle=True)
+                shuffle=True
+            )
             logger.info(f'After splitting, training data has shape {train_peptide_data.shape}, '
                         f'Validation data has shape {val_peptide_data.shape}')
         else:
@@ -329,18 +342,24 @@ if __name__ == '__main__':
                          f'{train_peptide_data.shape}, {val_peptide_data.shape}')
 
         # Create datasets
-        train_dataset = pHLADataset(peptide_seq_arr=train_peptide_data['peptide'].values,
-                                    hla_names_arr=train_peptide_data['hla_allele'].values,
-                                    hla_fp_dict=hla_fp_dict,
-                                    labels=train_peptide_data['label'].values)
+        train_dataset = pHLADataset(
+            peptide_seq_arr=train_peptide_data['peptide'].values,
+            hla_names_arr=train_peptide_data['hla_allele'].values,
+            hla_fp_dict=hla_fp_dict,
+            labels=train_peptide_data['label'].values,
+            has_augmented_hla=config['use_augmented_hla_data']
+        )
         logger.debug(f'Sample training data shapes: \n'
                      f'peptide: {train_dataset[0][0].shape}, \n'
                      f'hla: {train_dataset[0][1].shape} \n'
                      f'label: {train_dataset[0][2].shape}')
-        val_dataset = pHLADataset(peptide_seq_arr=val_peptide_data['peptide'].values,
-                                  hla_names_arr=val_peptide_data['hla_allele'].values,
-                                  hla_fp_dict=hla_fp_dict,
-                                  labels=val_peptide_data['label'].values)
+        val_dataset = pHLADataset(
+            peptide_seq_arr=val_peptide_data['peptide'].values,
+            hla_names_arr=val_peptide_data['hla_allele'].values,
+            hla_fp_dict=hla_fp_dict,
+            labels=val_peptide_data['label'].values,
+            has_augmented_hla=config['use_augmented_hla_data']
+        )
 
         # Create data loaders
         train_loader = torch.utils.data.DataLoader(
@@ -354,14 +373,16 @@ if __name__ == '__main__':
             num_workers=config['n_workers'],
             shuffle=False)
 
-        model = train_predictor(model,
-                                train_loader,
-                                val_loader,
-                                config)
+        model = train_predictor(
+            model,
+            train_loader,
+            val_loader,
+            config
+        )
         logger.info('Training completed successfully')
 
     logger.info('Skipping training. If you want to train the model, use '
-                   'the flag `--train` to enable training.')
+                'the flag `--train` to enable training.')
 
     # Test the model
     if config['predict']:

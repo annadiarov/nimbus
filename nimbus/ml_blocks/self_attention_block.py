@@ -36,6 +36,7 @@ class SelfAttention(nn.Module):
             self,
             x,
             mask=None,
+            return_attn=False,
     ):
         h = self.heads
         x = self.norm(x)
@@ -57,6 +58,9 @@ class SelfAttention(nn.Module):
 
         out = einsum('b h i j, b h j d -> b h i d', attn, v)
         out = rearrange(out, 'b h n d -> b n (h d)')
+        if return_attn:
+            return self.to_out(out), attn
+
         return self.to_out(out)
 
 
@@ -73,7 +77,13 @@ class SelfAttentionBlock(nn.Module):
         self.attn = SelfAttention(dim=dim, dropout=dropout, **kwargs)
         self.ff = FeedForwardBlock(dim=dim, mult=ff_mult, dropout=dropout)
 
-    def forward(self, x, mask=None):
-        x = self.attn(x, mask=mask) + x
-        x = self.ff(x) + x
-        return x
+    def forward(self, x, mask=None, return_attn=False):
+        if return_attn:
+            x1, attn = self.attn(x, mask=mask, return_attn=return_attn)
+            x = x1 + x
+            x = self.ff(x) + x
+            return x, attn
+        else:
+            x = self.attn(x, mask=mask, return_attn=False) + x
+            x = self.ff(x) + x
+            return x
