@@ -54,6 +54,14 @@ def parse_args():
                         type=str,
                         default='version',
                         help='Name of the experiment. It will be used to create the loggers')
+    parser.add_argument('--n_models_saved',
+                        dest='n_models_saved',
+                        type=int,
+                        default=1,
+                        help='Number of models to save during training. If 1, '
+                             'only the best model is saved according to the '
+                             'the monitored metric. If 0, no models are saved '
+                             'while if -1 all are saved.')
     # Behavior parameters
     parser.add_argument('--train',
                         dest='train',
@@ -198,8 +206,8 @@ def train_predictor(model, train_loader, val_loader, config):
     # saves a file like: my/path/sample-mnist-epoch02-val_loss0.32.ckpt
     checkpoint_callback = ModelCheckpoint(monitor='val_acc',
                                           mode='max',
-                                          filename='epoch{epoch:02d}-val_loss{val_loss:.2f}-val_acc{val_acc:.2f}',
-                                          save_top_k=1,
+                                          filename='epoch{epoch:02d}-val_loss{val_loss:.4f}-val_acc{val_acc:.2f}',
+                                          save_top_k=config['n_models_saved'],
                                           save_last=True,
                                           auto_insert_metric_name=False)
 
