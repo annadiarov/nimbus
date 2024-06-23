@@ -49,16 +49,19 @@ def parse_args():
                         type=str,
                         default='hla_fingerprints/hla_af_patch_info_patch_r18_pt400.csv',
                         help='File with HLA allele names and their corresponding indices in `hla_fp_file`')
-    parser.add_argument('--use_augmented_hla_data',
-                        dest='use_augmented_hla_data',
-                        action='store_true',
-                        help='If set, use the augmented HLA data provided in the flags'
-                             '`--hla_fp_file` and `--hla_fp_data_file`')
     parser.add_argument('--exp_name',
                         dest='exp_name',
                         type=str,
                         default='version',
                         help='Name of the experiment. It will be used to create the loggers')
+    parser.add_argument('--n_models_saved',
+                        dest='n_models_saved',
+                        type=int,
+                        default=1,
+                        help='Number of models to save during training. If 1, '
+                             'only the best model is saved according to the '
+                             'the monitored metric. If 0, no models are saved '
+                             'while if -1 all are saved.')
     # Behavior parameters
     parser.add_argument('--train',
                         dest='train',
@@ -96,6 +99,15 @@ def parse_args():
                         type=float,
                         default=0.8,
                         help='Ratio of the training data to be used for training')
+    parser.add_argument('--use_augmented_hla_data',
+                        dest='use_augmented_hla_data',
+                        action='store_true',
+                        help='If set, use the augmented HLA data provided in the flags'
+                             '`--hla_fp_file` and `--hla_fp_data_file`')
+    parser.add_argument('--use_all_augmented_hla_fp_data',
+                        dest='use_all_augmented_hla_fp_data',
+                        action='store_true',
+                        help='If set, use all the augmented data for each HLA allele')
     # Model parameters
     parser.add_argument('--pep_embedding_dim',
                         dest='pep_embedding_dim',
@@ -194,8 +206,8 @@ def train_predictor(model, train_loader, val_loader, config):
     # saves a file like: my/path/sample-mnist-epoch02-val_loss0.32.ckpt
     checkpoint_callback = ModelCheckpoint(monitor='val_acc',
                                           mode='max',
-                                          filename='epoch{epoch:02d}-val_loss{val_loss:.2f}-val_acc{val_acc:.2f}',
-                                          save_top_k=1,
+                                          filename='epoch{epoch:02d}-val_loss{val_loss:.4f}-val_acc{val_acc:.2f}',
+                                          save_top_k=config['n_models_saved'],
                                           save_last=True,
                                           auto_insert_metric_name=False)
 
@@ -347,7 +359,8 @@ if __name__ == '__main__':
             hla_names_arr=train_peptide_data['hla_allele'].values,
             hla_fp_dict=hla_fp_dict,
             labels=train_peptide_data['label'].values,
-            has_augmented_hla=config['use_augmented_hla_data']
+            has_augmented_hla=config['use_augmented_hla_data'],
+            use_all_augmented_data=config['use_all_augmented_hla_fp_data']
         )
         logger.debug(f'Sample training data shapes: \n'
                      f'peptide: {train_dataset[0][0].shape}, \n'
@@ -358,7 +371,8 @@ if __name__ == '__main__':
             hla_names_arr=val_peptide_data['hla_allele'].values,
             hla_fp_dict=hla_fp_dict,
             labels=val_peptide_data['label'].values,
-            has_augmented_hla=config['use_augmented_hla_data']
+            has_augmented_hla=config['use_augmented_hla_data'],
+            use_all_augmented_data=config['use_all_augmented_hla_fp_data']
         )
 
         # Create data loaders
