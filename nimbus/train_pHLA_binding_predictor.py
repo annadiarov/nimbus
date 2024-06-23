@@ -96,6 +96,10 @@ def parse_args():
                         type=float,
                         default=0.8,
                         help='Ratio of the training data to be used for training')
+    parser.add_argument('--use_all_augmented_hla_fp_data',
+                        dest='use_all_augmented_hla_fp_data',
+                        action='store_true',
+                        help='If set, use all the augmented data for each HLA allele')
     # Model parameters
     parser.add_argument('--pep_embedding_dim',
                         dest='pep_embedding_dim',
@@ -347,7 +351,8 @@ if __name__ == '__main__':
             hla_names_arr=train_peptide_data['hla_allele'].values,
             hla_fp_dict=hla_fp_dict,
             labels=train_peptide_data['label'].values,
-            has_augmented_hla=config['use_augmented_hla_data']
+            has_augmented_hla=config['use_augmented_hla_data'],
+            use_all_augmented_data=config['use_all_augmented_hla_fp_data']
         )
         logger.debug(f'Sample training data shapes: \n'
                      f'peptide: {train_dataset[0][0].shape}, \n'
@@ -358,7 +363,8 @@ if __name__ == '__main__':
             hla_names_arr=val_peptide_data['hla_allele'].values,
             hla_fp_dict=hla_fp_dict,
             labels=val_peptide_data['label'].values,
-            has_augmented_hla=config['use_augmented_hla_data']
+            has_augmented_hla=config['use_augmented_hla_data'],
+            use_all_augmented_data=config['use_all_augmented_hla_fp_data']
         )
 
         # Create data loaders
