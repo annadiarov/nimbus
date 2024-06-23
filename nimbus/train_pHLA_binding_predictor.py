@@ -49,11 +49,6 @@ def parse_args():
                         type=str,
                         default='hla_fingerprints/hla_af_patch_info_patch_r18_pt400.csv',
                         help='File with HLA allele names and their corresponding indices in `hla_fp_file`')
-    parser.add_argument('--use_augmented_hla_data',
-                        dest='use_augmented_hla_data',
-                        action='store_true',
-                        help='If set, use the augmented HLA data provided in the flags'
-                             '`--hla_fp_file` and `--hla_fp_data_file`')
     parser.add_argument('--exp_name',
                         dest='exp_name',
                         type=str,
@@ -96,6 +91,11 @@ def parse_args():
                         type=float,
                         default=0.8,
                         help='Ratio of the training data to be used for training')
+    parser.add_argument('--use_augmented_hla_data',
+                        dest='use_augmented_hla_data',
+                        action='store_true',
+                        help='If set, use the augmented HLA data provided in the flags'
+                             '`--hla_fp_file` and `--hla_fp_data_file`')
     parser.add_argument('--use_all_augmented_hla_fp_data',
                         dest='use_all_augmented_hla_fp_data',
                         action='store_true',
