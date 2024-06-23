@@ -229,9 +229,9 @@ class pHLABindingPredictor(L.LightningModule):
         # Logging as dict
         self.log_dict({f"{mode}_loss": loss,
                        f"{mode}_acc": acc,
-                       f"{mode}_precision": pos_precision,
-                       f"{mode}_recall": pos_recall,
-                       f"{mode}_f1": pos_f1,
+                       f"{mode}_pos_precision": pos_precision,
+                       f"{mode}_pos_recall": pos_recall,
+                       f"{mode}_pos_f1": pos_f1,
                        f"{mode}_neg_precision": neg_precision,
                        f"{mode}_neg_recall": neg_recall,
                        f"{mode}_neg_f1": neg_f1,
