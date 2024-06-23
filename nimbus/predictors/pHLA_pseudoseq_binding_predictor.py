@@ -227,9 +227,22 @@ class pHLAPseudoseqBindingPredictor(L.LightningModule):
         pos_prob = probs[batch_pos_idx].mean()
         neg_prob = probs[batch_neg_idx].mean()
         acc = ((logits > 0).long() == labels).float().sum() / len(labels)
+        # calculate precision, recall, f1
+        pos_precision = torch.sum((logits > 0).long() * labels) / torch.sum(logits > 0).float()
+        pos_recall = torch.sum((logits > 0).long() * labels) / torch.sum(labels).float()
+        pos_f1 = 2 * pos_precision * pos_recall / (pos_precision + pos_recall)
+        neg_precision = torch.sum((logits <= 0).long() * (1 - labels)) / torch.sum(logits <= 0).float()
+        neg_recall = torch.sum((logits <= 0).long() * (1 - labels)) / torch.sum(1 - labels).float()
+        neg_f1 = 2 * neg_precision * neg_recall / (neg_precision + neg_recall)
         # Logging as dict
         self.log_dict({f"{mode}_loss": loss,
                        f"{mode}_acc": acc,
+                       f"{mode}_pos_precision": pos_precision,
+                       f"{mode}_pos_recall": pos_recall,
+                       f"{mode}_pos_f1": pos_f1,
+                       f"{mode}_neg_precision": neg_precision,
+                       f"{mode}_neg_recall": neg_recall,
+                       f"{mode}_neg_f1": neg_f1,
                        f"{mode}_pos_prob": pos_prob,
                        f"{mode}_neg_prob": neg_prob},
                       on_step=False, on_epoch=True, prog_bar=True)
