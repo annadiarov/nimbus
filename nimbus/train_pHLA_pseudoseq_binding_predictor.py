@@ -85,6 +85,22 @@ def parse_args():
                         type=float,
                         default=0.8,
                         help='Ratio of the training data to be used for training')
+    parser.add_argument('--freeze_hla_selfattn',
+                        dest='freeze_hla_selfattn',
+                        action='store_true',
+                        help='If set, freeze the HLA self-attention layers when loading a pretrained model')
+    parser.add_argument('--freeze_pep_selfattn',
+                        dest='freeze_pep_selfattn',
+                        action='store_true',
+                        help='If set, freeze the peptide self-attention layers (and the peptide embedding) when loading a pretrained model')
+    parser.add_argument('--freeze_joint_crossattn',
+                        dest='freeze_joint_crossattn',
+                        action='store_true',
+                        help='If set, freeze the joint cross-attention layers when loading a pretrained model')
+    parser.add_argument('--freeze_filip',
+                        dest='freeze_filip',
+                        action='store_true',
+                        help='If set, freeze the FILIP layers when loading a pretrained model')
     # Model parameters
     parser.add_argument('--pep_embedding_dim',
                         dest='pep_embedding_dim',
@@ -169,6 +185,26 @@ def load_model(config):
     if config['pretrained_filename'] != '' and os.path.isfile(config['pretrained_filename']):
         logger.info(f"Loading pretrained model {config['pretrained_filename']}")
         model = pHLAPseudoseqBindingPredictor.load_from_checkpoint(config['pretrained_filename'])
+        if config['freeze_hla_selfattn']:
+            logger.info('Freezing HLA self-attention layers')
+            for name, param in model.named_parameters():
+                if 'h_self_attns' in name or 'h_pe' in name or 'h_ln' in name:
+                    param.requires_grad = False
+        if config['freeze_pep_selfattn']:
+            logger.info('Freezing peptide self-attention layers and embeddings')
+            for name, param in model.named_parameters():
+                if 'p_self_attns' in name or 'p_pe' in name or 'p_ln' in name or 'p_embedding' in name:
+                    param.requires_grad = False
+        if config['freeze_joint_crossattn']:
+            logger.info('Freezing joint cross-attention layers')
+            for name, param in model.named_parameters():
+                if 'joint_cross_attns' in name:
+                    param.requires_grad = False
+        if config['freeze_filip']:
+            logger.info('Freezing FILIP layers')
+            for name, param in model.named_parameters():
+                if 'filip' in name:
+                    param.requires_grad = False
     else:
         model = pHLAPseudoseqBindingPredictor(**config)
     return model
